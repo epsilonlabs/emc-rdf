@@ -38,6 +38,8 @@ import org.eclipse.epsilon.eol.models.IRelativePathResolver;
 
 public class RDFModel extends CachedModel<RDFModelElement> {
 
+	public static final String PROPERTY_LANGUAGEPREFERENCE = "lanuguagePreference";
+	
 	public static final String PROPERTY_URIS = "uris";
 
 	/**

@@ -40,6 +40,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 
 public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialog {
 
@@ -145,7 +147,7 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 	}
 
 	protected class NamespaceMappingTableEntry {
-		public String prefix, url;
+		public String prefix, url, languagePreference;
 	}
 
 	protected class URLTableEntry {
@@ -177,6 +179,7 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		createNameAliasGroup(control);
 		createRDFUrlsGroup(control);
 		createNamespaceMappingGroup(control);
+		createLanguagePreferenceGroup(control);
 	}
 
 	private Composite createNamespaceMappingGroup(Composite parent) {
@@ -365,6 +368,22 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		return groupContent;
 	}
 
+	
+	protected Label languagePreferenceLabel;
+	protected Text languagePreferenceText;
+	private Composite createLanguagePreferenceGroup(Composite parent) {
+		final Composite groupContent = DialogUtil.createGroupContainer(parent, "Language preference", 1);
+		languagePreferenceLabel = new Label(groupContent, SWT.NONE);
+		languagePreferenceLabel.setText("Language preference in order: ");
+		
+		languagePreferenceText = new Text(groupContent, SWT.BORDER);
+		languagePreferenceText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		
+		groupContent.layout();
+		groupContent.pack();
+		return groupContent;
+	}
+	
 	@Override
 	protected void loadProperties(){
 		super.loadProperties();
@@ -389,12 +408,14 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 				}
 			}
 		}
+		
+		languagePreferenceText.setText(properties.getProperty(RDFModel.PROPERTY_LANGUAGEPREFERENCE));
 
 		this.urlList.refresh();
 		this.nsMappingTable.refresh();
 		validateURLs();
 	}
-	
+	 
 	@Override
 	protected void storeProperties(){
 		super.storeProperties();
@@ -408,6 +429,9 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 			String.join(",", nsMappingEntries.stream()
 				.map(e -> e.prefix + "=" + e.url)
 				.collect(Collectors.toList())));
+		
+		properties.put(RDFModel.PROPERTY_LANGUAGEPREFERENCE, 
+				languagePreferenceText.getText());
 	}
 
 	protected void validateURLs() {
