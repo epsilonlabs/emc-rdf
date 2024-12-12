@@ -17,6 +17,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IFile;
@@ -35,6 +37,8 @@ import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
@@ -371,17 +375,48 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 	
 	protected Label languagePreferenceLabel;
 	protected Text languagePreferenceText;
+	protected Label languagePreferenceErrorLabel;
+
 	private Composite createLanguagePreferenceGroup(Composite parent) {
 		final Composite groupContent = DialogUtil.createGroupContainer(parent, "Language preference", 1);
+		
 		languagePreferenceLabel = new Label(groupContent, SWT.NONE);
 		languagePreferenceLabel.setText("Language preference in order: ");
 		
 		languagePreferenceText = new Text(groupContent, SWT.BORDER);
 		languagePreferenceText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		languagePreferenceText.addVerifyListener(new VerifyListener() {
+			@Override
+			public void verifyText(VerifyEvent event) {
+				String text = languagePreferenceText.getText();
+
+				if (text.length() > 0) {
+					StringJoiner invalidTags = new StringJoiner(" "); 
+					invalidTags.add("Invalid tags: ");
+					 
+					for (String tag : text.split(",")) {
+						System.out.print("Validating: [" + tag + "]");
+						if (!bcp47Validator(tag)) {
+							invalidTags.add(tag);
+							System.out.println(tag + " Invalid tags: "+invalidTags.toString());	
+						}
+					}
+					languagePreferenceErrorLabel.setText(invalidTags.toString());
+				}
+			}	
+		});
+		
+		languagePreferenceErrorLabel = new Label(groupContent,SWT.NONE);
+		languagePreferenceErrorLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		groupContent.layout();
 		groupContent.pack();
 		return groupContent;
+	}
+	
+	public boolean bcp47Validator (String bcp47tag) {
+		boolean isValidBCP47 = !("und".equals(Locale.forLanguageTag(bcp47tag).toLanguageTag()));
+		return isValidBCP47;
 	}
 	
 	@Override
