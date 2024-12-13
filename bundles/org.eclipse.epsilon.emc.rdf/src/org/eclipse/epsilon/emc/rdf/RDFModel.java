@@ -52,6 +52,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	 */
 	public static final String PROPERTY_PREFIXES = "prefixes";
 
+	protected final List<String> languagePreference = new ArrayList<>();
 	protected final Map<String, String> customPrefixesMap = new HashMap<>();
 	protected final List<String> uris = new ArrayList<>();
 	protected Model model;
@@ -155,6 +156,11 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 				String sURI = sItem.substring(idxEquals + 1);
 				customPrefixesMap.put(sPrefix, sURI);
 			}
+		}
+		
+		this.languagePreference.clear();
+		for (String tag : properties.getProperty(PROPERTY_LANGUAGEPREFERENCE).split(",")) {
+			this.languagePreference.add(tag.strip());
 		}
 
 		load();
@@ -301,6 +307,10 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 
 	public Map<String, String> getCustomPrefixesMap() {
 		return this.customPrefixesMap;
+	}
+	
+	public List<String> getLanguagePreference() {
+		return languagePreference;
 	}
 
 	/**
