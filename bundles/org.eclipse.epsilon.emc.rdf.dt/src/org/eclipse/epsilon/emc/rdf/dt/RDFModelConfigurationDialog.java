@@ -378,27 +378,25 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 	protected Label languagePreferenceErrorLabel;
 
 	private Composite createLanguagePreferenceGroup(Composite parent) {
-		final Composite groupContent = DialogUtil.createGroupContainer(parent, "Language preference", 1);
+		final Composite groupContent = DialogUtil.createGroupContainer(parent, "Language tag preference", 1);
 		
 		languagePreferenceLabel = new Label(groupContent, SWT.NONE);
-		languagePreferenceLabel.setText("Language preference in order: ");
+		languagePreferenceLabel.setText("Language tag preference in order: ");
 		
 		languagePreferenceText = new Text(groupContent, SWT.BORDER);
 		languagePreferenceText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		languagePreferenceText.addVerifyListener(new VerifyListener() {
 			@Override
 			public void verifyText(VerifyEvent event) {
-				String text = languagePreferenceText.getText();
+				String text = languagePreferenceText.getText() + event.text;
+				text = text.replaceAll("\\s", "");	
 
 				if (text.length() > 0) {
-					StringJoiner invalidTags = new StringJoiner(" "); 
-					invalidTags.add("Invalid tags: ");
-					 
-					for (String tag : text.split(",")) {
-						System.out.print("Validating: [" + tag + "]");
+					StringJoiner invalidTags = new StringJoiner(" "); 					
+					invalidTags.add("\nInvalid tags: ");
+					for (String tag : text.split(",")) {						
 						if (!bcp47Validator(tag)) {
-							invalidTags.add(tag);
-							System.out.println(tag + " Invalid tags: "+invalidTags.toString());	
+							invalidTags.add(tag);								
 						}
 					}
 					languagePreferenceErrorLabel.setText(invalidTags.toString());
@@ -465,8 +463,9 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 				.map(e -> e.prefix + "=" + e.url)
 				.collect(Collectors.toList())));
 		
+		
 		properties.put(RDFModel.PROPERTY_LANGUAGEPREFERENCE, 
-				languagePreferenceText.getText());
+				languagePreferenceText.getText().replaceAll("\\s", ""));
 	}
 
 	protected void validateURLs() {
