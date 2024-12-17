@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -349,5 +350,10 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 			}
 		}
 		return model.getNsURIPrefix(namespaceURI);
+	}
+	
+	public boolean isValidLanguageTag (String bcp47tag) {
+		boolean isValidBCP47 = !("und".equals(Locale.forLanguageTag(bcp47tag).toLanguageTag()));
+		return isValidBCP47;
 	}
 }
