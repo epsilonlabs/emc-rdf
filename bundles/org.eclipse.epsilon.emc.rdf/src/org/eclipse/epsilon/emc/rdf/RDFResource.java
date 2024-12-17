@@ -32,9 +32,8 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 
 public class RDFResource extends RDFModelElement {
-	//super.getModel().getLanguagePreference()
 	protected static final String LITERAL_SUFFIX = "_literal";
-	protected static List<String> preferedLanguageTagList;
+	protected static List<String> preferredLanguageTagList;
 	
 	enum LiteralMode {
 		RAW, VALUES_ONLY
@@ -45,40 +44,49 @@ public class RDFResource extends RDFModelElement {
 	public RDFResource(Resource resource, RDFModel rdfModel) {
 		super(rdfModel);
 		this.resource = resource;
-		preferedLanguageTagList = rdfModel.getLanguagePreference();
-		preferedLanguageTagList.add("");
+		preferredLanguageTagList = rdfModel.getLanguagePreference();
+		preferredLanguageTagList.add("");
 	}
 
 	public Resource getResource() {
 		return resource;
 	}
+	
+	
+	private Collection<Object> getPropertyPreferredLanguage(RDFQualifiedName pName, IEolContext context, LiteralMode literalMode) {
+		Collection<Object> value = null ;
+		for (String lTag : preferredLanguageTagList) {
+			RDFQualifiedName withLanguageTag = pName.withLanguageTag(lTag);
+			value = getProperty(withLanguageTag, context, literalMode);
+			if (!value.isEmpty()) {
+				break;
+			}
+		}
+		return value;
+	}
 
 	public Collection<Object> getProperty(String property, IEolContext context) {
 		final RDFQualifiedName pName = RDFQualifiedName.from(property, this.owningModel::getNamespaceURI);
-		
 		Collection<Object> value = null ;
 		
-		// Try speculative propertyGetting based on the preferedLanguageTagList
-		if ((pName.languageTag != null) && (pName.languageTag.equals(""))) {
-			for (String lTag : preferedLanguageTagList) {
-				String propertySpeculative = property + lTag;
-				final RDFQualifiedName pNameSpeculative = RDFQualifiedName.from(propertySpeculative,
-						this.owningModel::getNamespaceURI);
-				value = getProperty(pNameSpeculative, context, LiteralMode.VALUES_ONLY);
-				if (!value.isEmpty()) {
-					break;
-				}
-			}
-		} else { // A tag was provided
+		if ((pName.languageTag != null) && (pName.languageTag.equals(""))) { // Try preferred language tags
+			value = getPropertyPreferredLanguage(pName, context, LiteralMode.VALUES_ONLY);
+		} else { // A language tag was provided
 			value = getProperty(pName, context, LiteralMode.VALUES_ONLY);
 		}
-		
+
 		if (value.isEmpty() && pName.localName.endsWith(LITERAL_SUFFIX)) {
-			final String localNameWithoutSuffix = pName.localName.substring(0, pName.localName.length() - LITERAL_SUFFIX.length());
+			final String localNameWithoutSuffix = pName.localName.substring(0,
+					pName.localName.length() - LITERAL_SUFFIX.length());
 			RDFQualifiedName withoutLiteral = pName.withLocalName(localNameWithoutSuffix);
-			return getProperty(withoutLiteral, context, LiteralMode.RAW);
+
+			if ((pName.languageTag != null) && (pName.languageTag.equals(""))) { // Try preferred language tags
+				return getPropertyPreferredLanguage(withoutLiteral, context, LiteralMode.RAW);
+			} else { // A tag was provided
+				return getProperty(withoutLiteral, context, LiteralMode.RAW);
+			}
 		}
-		
+
 		return value;
 
 
