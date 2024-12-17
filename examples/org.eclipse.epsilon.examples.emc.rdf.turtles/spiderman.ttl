@@ -14,4 +14,4 @@
 <#spiderman>
     rel:enemyOf <#green-goblin> ;
     a foaf:Person ;
-    foaf:name "Spiderman", "Человек-паук"@ru .
+    foaf:name "Spiderman", "Человек-паук"@ru ,"スパイダーマン"@ja .
