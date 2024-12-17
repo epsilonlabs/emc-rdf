@@ -394,8 +394,8 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 				if (text.length() > 0) {
 					StringJoiner invalidTags = new StringJoiner(" "); 					
 					invalidTags.add("\nInvalid tags: ");
-					for (String tag : text.split(",")) {						
-						if (!bcp47Validator(tag)) {
+					for (String tag : text.split(",")) {	
+						if (!RDFModel.isValidLanguageTag(tag)) {
 							invalidTags.add(tag);								
 						}
 					}
@@ -410,11 +410,6 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		groupContent.layout();
 		groupContent.pack();
 		return groupContent;
-	}
-	
-	public boolean bcp47Validator (String bcp47tag) {
-		boolean isValidBCP47 = !("und".equals(Locale.forLanguageTag(bcp47tag).toLanguageTag()));
-		return isValidBCP47;
 	}
 	
 	@Override

@@ -352,7 +352,8 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		return model.getNsURIPrefix(namespaceURI);
 	}
 	
-	public boolean isValidLanguageTag (String bcp47tag) {
+	// Using Java's Locale class to check that tags conform to bcp47 structure
+	public static boolean isValidLanguageTag (String bcp47tag) {
 		boolean isValidBCP47 = !("und".equals(Locale.forLanguageTag(bcp47tag).toLanguageTag()));
 		return isValidBCP47;
 	}
