@@ -38,6 +38,7 @@ public class RDFModelTest {
 	private static final Set<String> SPIDERMAN_NAMES = new HashSet<>(Arrays.asList(SPIDERMAN_NAME, SPIDERMAN_NAME_RU));
 
 	private static final String GREEN_GOBLIN_URI = "http://example.org/#green-goblin";
+	private static final String GREEN_GOBLIN_NAME = "Green Goblin";
 
 	private static final Set<String> ALL_NAMES = new HashSet<>();
 	private static final Set<String> ALL_PERSON_URIS = new HashSet<>(Arrays.asList(SPIDERMAN_URI, GREEN_GOBLIN_URI));
@@ -78,21 +79,21 @@ public class RDFModelTest {
 		for (RDFModelElement o : model.allContents()) {
 			names.addAll((Collection<String>) pGetter.invoke(o, "name", context));
 		}
-		assertEquals(ALL_NAMES, names);
+		assertEquals(new HashSet<>(Arrays.asList(SPIDERMAN_NAME, GREEN_GOBLIN_NAME)), names);
 	}
 
 	@Test
 	public void getNamesWithPrefix() throws Exception {
 		RDFResource res = (RDFResource) model.getElementById(SPIDERMAN_URI);
 		Set<String> names = new HashSet<>((Collection<String>) pGetter.invoke(res, "foaf:name", context));
-		assertEquals(SPIDERMAN_NAMES, names);
+		assertEquals(Collections.singleton(SPIDERMAN_NAME), names);
 	}
 
 	@Test
 	public void getNamesWithDoubleColonPrefix() throws Exception {
 		RDFResource res = (RDFResource) model.getElementById(SPIDERMAN_URI);
 		Set<String> names = new HashSet<>((Collection<String>) pGetter.invoke(res, "foaf::name", context));
-		assertEquals(SPIDERMAN_NAMES, names);
+		assertEquals(Collections.singleton(SPIDERMAN_NAME), names);
 	}
 
 	@Test
@@ -102,7 +103,7 @@ public class RDFModelTest {
 		for (RDFLiteral l : (Collection<RDFLiteral>) pGetter.invoke(res, "foaf:name_literal", context)) {
 			names.add((String) l.getValue());
 		}
-		assertEquals(SPIDERMAN_NAMES, names);
+		assertEquals(Collections.singleton(SPIDERMAN_NAME), names);
 	}
 
 	@Test
