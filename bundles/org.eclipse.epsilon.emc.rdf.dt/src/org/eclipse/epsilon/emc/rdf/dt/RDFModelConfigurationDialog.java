@@ -15,10 +15,10 @@ package org.eclipse.epsilon.emc.rdf.dt;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
-import java.util.StringJoiner;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.resources.IFile;
@@ -35,10 +35,10 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.VerifyEvent;
-import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
@@ -80,7 +80,7 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		protected void setValue(Object element, Object value) {
 			((NamespaceMappingTableEntry)element).prefix = String.valueOf(value);
 			viewer.update(element, null);
-			validateURLs();
+			validateForm();
 		}
 	}
 
@@ -113,7 +113,7 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		protected void setValue(Object element, Object value) {
 			((NamespaceMappingTableEntry)element).url = String.valueOf(value);
 			viewer.update(element, null);
-			validateURLs();
+			validateForm();
 		}
 	}
 
@@ -146,12 +146,12 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		protected void setValue(Object element, Object value) {
 			((URLTableEntry)element).url = String.valueOf(value);
 			viewer.update(element, null);
-			validateURLs();
+			validateForm();
 		}
 	}
 
 	protected class NamespaceMappingTableEntry {
-		public String prefix, url, languagePreference;
+		public String prefix, url;
 	}
 
 	protected class URLTableEntry {
@@ -353,6 +353,7 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 						urls.remove(it.next());
 					}
 					urlList.refresh();
+					validateForm();
 				}
 			}
 		});
@@ -364,6 +365,7 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 			public void widgetSelected(SelectionEvent e) {
 				urls.clear();
 				urlList.refresh();
+				validateForm();
 			}
 		});
 
@@ -375,37 +377,21 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 	
 	protected Label languagePreferenceLabel;
 	protected Text languagePreferenceText;
-	protected Label languagePreferenceErrorLabel;
 
 	private Composite createLanguagePreferenceGroup(Composite parent) {
 		final Composite groupContent = DialogUtil.createGroupContainer(parent, "Language tag preference", 1);
 		
 		languagePreferenceLabel = new Label(groupContent, SWT.NONE);
-		languagePreferenceLabel.setText("Language tag preference in order: ");
+		languagePreferenceLabel.setText("Comma-separated preferred language tags, in descending priority:");
 		
 		languagePreferenceText = new Text(groupContent, SWT.BORDER);
-		languagePreferenceText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		languagePreferenceText.addVerifyListener(new VerifyListener() {
+		languagePreferenceText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));	
+		languagePreferenceText.addModifyListener(new ModifyListener() {
 			@Override
-			public void verifyText(VerifyEvent event) {
-				String text = languagePreferenceText.getText() + event.text;
-				text = text.replaceAll("\\s", "");	
-
-				if (text.length() > 0) {
-					StringJoiner invalidTags = new StringJoiner(" "); 					
-					invalidTags.add("\nInvalid tags: ");
-					for (String tag : text.split(",")) {	
-						if (!RDFModel.isValidLanguageTag(tag)) {
-							invalidTags.add(tag);								
-						}
-					}
-					languagePreferenceErrorLabel.setText(invalidTags.toString());
-				}
-			}	
+			public void modifyText(ModifyEvent event) {
+				validateForm();
+			}
 		});
-		
-		languagePreferenceErrorLabel = new Label(groupContent,SWT.NONE);
-		languagePreferenceErrorLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		
 		groupContent.layout();
 		groupContent.pack();
@@ -437,11 +423,11 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 			}
 		}
 		
-		languagePreferenceText.setText(properties.getProperty(RDFModel.PROPERTY_LANGUAGEPREFERENCE));
+		languagePreferenceText.setText(properties.getProperty(RDFModel.PROPERTY_LANGUAGE_PREFERENCE));
 
 		this.urlList.refresh();
 		this.nsMappingTable.refresh();
-		validateURLs();
+		validateForm();
 	}
 	 
 	@Override
@@ -458,12 +444,26 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 				.map(e -> e.prefix + "=" + e.url)
 				.collect(Collectors.toList())));
 		
-		
-		properties.put(RDFModel.PROPERTY_LANGUAGEPREFERENCE, 
+		properties.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE,
 				languagePreferenceText.getText().replaceAll("\\s", ""));
 	}
 
-	protected void validateURLs() {
+	protected void validateForm() {
+		String text = languagePreferenceText.getText().strip();
+		if (text.length() > 0) {
+			Set<String> invalidTags = new HashSet<>();
+			for (String tag : text.split(",")) {
+				if (!RDFModel.isValidLanguageTag(tag)) {
+					invalidTags.add(tag);
+				}
+			}
+			if (!invalidTags.isEmpty()) {
+				setErrorMessage(String.format(
+					"Invalid tags: %s", String.join(" ", invalidTags)));
+				return;
+			}
+		}
+
 		for (URLTableEntry entry : this.urls) {
 			String errorMessage = validateURL(entry.url);
 			if (errorMessage != null) {

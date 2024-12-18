@@ -39,7 +39,7 @@ import org.eclipse.epsilon.eol.models.IRelativePathResolver;
 
 public class RDFModel extends CachedModel<RDFModelElement> {
 
-	public static final String PROPERTY_LANGUAGEPREFERENCE = "lanuguagePreference";
+	public static final String PROPERTY_LANGUAGE_PREFERENCE = "lanuguagePreference";
 	
 	public static final String PROPERTY_URIS = "uris";
 
@@ -160,7 +160,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		}
 		
 		this.languagePreference.clear();
-		for (String tag : properties.getProperty(PROPERTY_LANGUAGEPREFERENCE).split(",")) {
+		for (String tag : properties.getProperty(PROPERTY_LANGUAGE_PREFERENCE).split(",")) {
 			this.languagePreference.add(tag.strip());
 		}
 
