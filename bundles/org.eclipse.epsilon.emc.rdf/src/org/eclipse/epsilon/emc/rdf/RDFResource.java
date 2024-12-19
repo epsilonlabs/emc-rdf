@@ -36,9 +36,6 @@ import com.google.common.collect.MultimapBuilder;
 
 public class RDFResource extends RDFModelElement {
 	protected static final String LITERAL_SUFFIX = "_literal";
-
-	// TODO should be moved to the model, and parsed only once when the model loads
-	protected List<String> preferredLanguageTagList;
 	
 	enum LiteralMode {
 		RAW, VALUES_ONLY
@@ -49,8 +46,6 @@ public class RDFResource extends RDFModelElement {
 	public RDFResource(Resource resource, RDFModel rdfModel) {
 		super(rdfModel);
 		this.resource = resource;
-		preferredLanguageTagList = rdfModel.getLanguagePreference();
-		preferredLanguageTagList.add("");
 	}
 
 	public Resource getResource() {
@@ -84,7 +79,7 @@ public class RDFResource extends RDFModelElement {
 
 	private Collection<Object> filterByPreferredLanguage(Collection<Object> value, LiteralMode literalMode) {
 		// If no preferred languages are specified, don't do any filtering
-		if (preferredLanguageTagList.isEmpty()) {
+		if (super.getModel().getLanguagePreference().isEmpty()) {
 			switch (literalMode) {
 			case RAW:
 				return value;
@@ -108,7 +103,7 @@ public class RDFResource extends RDFModelElement {
 			}
 		}
 
-		for (String tag : preferredLanguageTagList) {
+		for (String tag : super.getModel().getLanguagePreference()) {
 			if (literalsByTag.containsKey(tag)) {
 				switch (literalMode) {
 				case RAW:
