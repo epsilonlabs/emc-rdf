@@ -79,7 +79,7 @@ public class RDFModelTest {
 		for (RDFModelElement o : model.allContents()) {
 			names.addAll((Collection<String>) pGetter.invoke(o, "name", context));
 		}
-		assertEquals("With no language preference and no tag, all values return", ALL_NAMES, names);;
+		assertEquals("With no language preference and no tag, all values return", ALL_NAMES, names);
 	}
 
 	@Test
