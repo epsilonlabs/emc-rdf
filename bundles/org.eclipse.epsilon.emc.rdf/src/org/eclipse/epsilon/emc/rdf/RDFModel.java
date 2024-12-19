@@ -160,8 +160,10 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		}
 		
 		this.languagePreference.clear();
-		for (String tag : properties.getProperty(PROPERTY_LANGUAGE_PREFERENCE).split(",")) {
-			this.languagePreference.add(tag.strip());
+		if (!properties.getProperty(PROPERTY_LANGUAGE_PREFERENCE).isEmpty()) {	
+			for (String tag : properties.getProperty(PROPERTY_LANGUAGE_PREFERENCE).split(",")) {
+				this.languagePreference.add(tag.strip());
+			}
 		}
 
 		load();
@@ -311,6 +313,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	}
 	
 	public List<String> getLanguagePreference() {
+		System.out.println("returning: " +languagePreference);
 		return languagePreference;
 	}
 
