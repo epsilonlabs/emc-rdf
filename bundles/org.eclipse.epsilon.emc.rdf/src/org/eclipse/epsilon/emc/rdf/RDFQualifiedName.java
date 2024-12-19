@@ -73,6 +73,10 @@ public class RDFQualifiedName {
 	public RDFQualifiedName withLocalName(String newLocalName) {
 		return new RDFQualifiedName(prefix, namespaceURI, newLocalName, languageTag);
 	}
+	
+	public RDFQualifiedName withLanguageTag(String newLanguageTag) {
+		return new RDFQualifiedName(prefix, namespaceURI, localName, newLanguageTag);
+	}
 
 	@Override
 	public String toString() {
