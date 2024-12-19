@@ -110,7 +110,6 @@ public class RDFModelLanguageTagsTest {
 	@Test
 	public void getAllContentsNamesWithoutPrefixNoPreferredLanguageTags() throws Exception {
 		setupModel(null);
-		System.out.println(model.getLanguagePreference().toString());
 		Set<String> names = new HashSet<>();
 		for (RDFModelElement o : model.allContents()) {
 			names.addAll((Collection<String>) pGetter.invoke(o, "name", context));
@@ -121,7 +120,6 @@ public class RDFModelLanguageTagsTest {
 	@Test
 	public void getNamesWithoutPrefixNoPreferredLanguageTag() throws Exception {
 		setupModel(null);
-		System.out.println(model.getLanguagePreference().toString());
 		RDFResource res = (RDFResource) model.getElementById(SPIDERMAN_URI);
 		Set<String> names = new HashSet<>((Collection<String>) pGetter.invoke(res, "name", context));
 		assertEquals("With no language preference and no tag, all values return", SPIDERMAN_NAMES, names);
