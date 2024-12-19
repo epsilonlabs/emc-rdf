@@ -132,7 +132,7 @@ public class RDFModelLanguageTagsTest {
 		setupModel(LANGUAGE_PREFERENCE_EN_STRING);
 		RDFResource res = (RDFResource) model.getElementById(SPIDERMAN_URI);
 		Set<String> names = new HashSet<>((Collection<String>) pGetter.invoke(res, "name", context));
-		assertEquals("Should return all when language preference cant be matched",SPIDERMAN_NAMES, names);
+		assertEquals("Should return untagged when language preference cant be matched",Collections.singleton(SPIDERMAN_NAME), names);
 	}
 	
 	@Test
@@ -140,7 +140,7 @@ public class RDFModelLanguageTagsTest {
 		setupModel(LANGUAGE_PREFERENCE_EN_STRING);
 		RDFResource res = (RDFResource) model.getElementById(SPIDERMAN_URI);
 		Set<String> names = new HashSet<>((Collection<String>) pGetter.invoke(res, "foaf:name", context));
-		assertEquals("Should return all when language preference cant be matched",SPIDERMAN_NAMES, names);
+		assertEquals("Should return untagged when language preference cant be matched",Collections.singleton(SPIDERMAN_NAME), names);
 	}
 	
 	@Test
@@ -151,7 +151,7 @@ public class RDFModelLanguageTagsTest {
 		for (RDFLiteral l : (Collection<RDFLiteral>) pGetter.invoke(res, "foaf:name_literal", context)) {
 			names.add((String) l.getValue());
 		}
-		assertEquals("Should return all when language preference cant be matched",SPIDERMAN_NAMES, names);
+		assertEquals("Should return untagged when language preference cant be matched",Collections.singleton(SPIDERMAN_NAME), names);
 	}
 
 	@Test
@@ -162,9 +162,8 @@ public class RDFModelLanguageTagsTest {
 		for (RDFLiteral l : (Collection<RDFLiteral>) pGetter.invoke(res, "name_literal", context)) {
 			names.add((String) l.getValue());
 		}
-		assertEquals("Should return all when language preference cant be matched",SPIDERMAN_NAMES, names);
+		assertEquals("Should return untagged when language preference cant be matched",Collections.singleton(SPIDERMAN_NAME), names);
 	}
-	
 	
 	// JA preferred and available
 	
