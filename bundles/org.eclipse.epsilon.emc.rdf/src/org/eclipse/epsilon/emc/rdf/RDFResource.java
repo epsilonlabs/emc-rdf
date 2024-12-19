@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Property;
@@ -28,11 +29,12 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.RDF;
 import org.eclipse.epsilon.eol.execute.context.IEolContext;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
 public class RDFResource extends RDFModelElement {
-
 	protected static final String LITERAL_SUFFIX = "_literal";
 	
 	enum LiteralMode {
@@ -53,16 +55,80 @@ public class RDFResource extends RDFModelElement {
 	public Collection<Object> getProperty(String property, IEolContext context) {
 		final RDFQualifiedName pName = RDFQualifiedName.from(property, this.owningModel::getNamespaceURI);
 
-		Collection<Object> value = getProperty(pName, context, LiteralMode.VALUES_ONLY);
+		Collection<Object> value = getProperty(pName, context, LiteralMode.RAW);
+		if (!value.isEmpty() && !value.stream().anyMatch(p -> p instanceof RDFResource)) {
+			value = filterByPreferredLanguage(value, LiteralMode.VALUES_ONLY);
+			if (!value.isEmpty()) {
+				return value;
+			}
+		}
+
 		if (value.isEmpty() && pName.localName.endsWith(LITERAL_SUFFIX)) {
-			final String localNameWithoutSuffix = pName.localName.substring(0, pName.localName.length() - LITERAL_SUFFIX.length());
+			final String localNameWithoutSuffix = pName.localName.substring(0,
+					pName.localName.length() - LITERAL_SUFFIX.length());
 			RDFQualifiedName withoutLiteral = pName.withLocalName(localNameWithoutSuffix);
-			return getProperty(withoutLiteral, context, LiteralMode.RAW);
+
+			value = getProperty(withoutLiteral, context, LiteralMode.RAW);
+			if (!value.isEmpty() && !value.stream().anyMatch(p -> p instanceof RDFResource)) {
+				value = filterByPreferredLanguage(value, LiteralMode.RAW);
+			}
 		}
 
 		return value;
 	}
 
+	private Collection<Object> filterByPreferredLanguage(Collection<Object> value, LiteralMode literalMode) {
+		// If no preferred languages are specified, don't do any filtering
+		if (super.getModel().getLanguagePreference().isEmpty()) {
+			switch (literalMode) {
+			case RAW:
+				return value;
+			case VALUES_ONLY:
+				return value.stream().map(e -> e instanceof RDFLiteral
+					? ((RDFLiteral) e).getValue() : e).collect(Collectors.toList());
+			default:
+				throw new IllegalArgumentException("Unknown literal mode " + literalMode);
+			}
+		}
+
+		// Otherwise, group literals by language tag
+		Multimap<String, RDFLiteral> literalsByTag = HashMultimap.create();
+		for (Object element : value) {
+			if (element instanceof RDFLiteral) {
+				RDFLiteral literal = (RDFLiteral) element;
+				literalsByTag.put(literal.getLanguage() == null ? "" : literal.getLanguage(), literal);
+			} else {
+				// TODO #19 see if we run into this scenario (perhaps with integers instead of strings?), print some warning, return value as is as fallback
+				throw new IllegalArgumentException("Expected RDFLiteral while filtering based on preferred languages, but got " + element);
+			}
+		}
+
+		for (String tag : super.getModel().getLanguagePreference()) {
+			if (literalsByTag.containsKey(tag)) {
+				switch (literalMode) {
+				case RAW:
+					return new ArrayList<>(literalsByTag.get(tag));
+				case VALUES_ONLY:
+					return literalsByTag.get(tag).stream().map(l -> 
+					l.getValue()).collect(Collectors.toList());
+				}
+			}
+		}
+
+		// If we don't find any matches in the preferred languages,
+		// fall back to the untagged literals (if any).
+		Collection<RDFLiteral> rawFromUntagged = literalsByTag.get("");
+		switch (literalMode) {
+		case RAW:
+			return new ArrayList<>(rawFromUntagged);
+		case VALUES_ONLY:
+			return rawFromUntagged.stream().map(l -> l.getValue())
+				.collect(Collectors.toList());
+		default:
+			throw new IllegalArgumentException("Unknown literal mode " + literalMode);
+		}
+	}
+	
 	public Collection<Object> getProperty(RDFQualifiedName pName, IEolContext context, LiteralMode literalMode) {
 		// Filter statements by prefix and local name
 		ExtendedIterator<Statement> itStatements = null;

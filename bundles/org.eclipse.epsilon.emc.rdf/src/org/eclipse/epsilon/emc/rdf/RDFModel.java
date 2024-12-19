@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -38,6 +39,8 @@ import org.eclipse.epsilon.eol.models.IRelativePathResolver;
 
 public class RDFModel extends CachedModel<RDFModelElement> {
 
+	public static final String PROPERTY_LANGUAGE_PREFERENCE = "lanuguagePreference";
+	
 	public static final String PROPERTY_URIS = "uris";
 
 	/**
@@ -50,6 +53,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	 */
 	public static final String PROPERTY_PREFIXES = "prefixes";
 
+	protected final List<String> languagePreference = new ArrayList<>();
 	protected final Map<String, String> customPrefixesMap = new HashMap<>();
 	protected final List<String> uris = new ArrayList<>();
 	protected Model model;
@@ -152,6 +156,13 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 				String sPrefix = sItem.substring(0, idxEquals);
 				String sURI = sItem.substring(idxEquals + 1);
 				customPrefixesMap.put(sPrefix, sURI);
+			}
+		}
+		
+		this.languagePreference.clear();
+		if (!properties.getProperty(PROPERTY_LANGUAGE_PREFERENCE).isEmpty()) {	
+			for (String tag : properties.getProperty(PROPERTY_LANGUAGE_PREFERENCE).split(",")) {
+				this.languagePreference.add(tag.strip());
 			}
 		}
 
@@ -300,6 +311,10 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	public Map<String, String> getCustomPrefixesMap() {
 		return this.customPrefixesMap;
 	}
+	
+	public List<String> getLanguagePreference() {
+		return languagePreference;
+	}
 
 	/**
 	 * <p>
@@ -337,5 +352,11 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 			}
 		}
 		return model.getNsURIPrefix(namespaceURI);
+	}
+	
+	// Using Java's Locale class to check that tags conform to bcp47 structure
+	public static boolean isValidLanguageTag (String bcp47tag) {
+		boolean isValidBCP47 = !("und".equals(Locale.forLanguageTag(bcp47tag).toLanguageTag()));
+		return isValidBCP47;
 	}
 }
