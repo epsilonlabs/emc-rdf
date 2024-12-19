@@ -313,7 +313,6 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	}
 	
 	public List<String> getLanguagePreference() {
-		System.out.println("returning: " +languagePreference);
 		return languagePreference;
 	}
 
