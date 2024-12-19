@@ -79,21 +79,21 @@ public class RDFModelTest {
 		for (RDFModelElement o : model.allContents()) {
 			names.addAll((Collection<String>) pGetter.invoke(o, "name", context));
 		}
-		assertEquals(new HashSet<>(Arrays.asList(SPIDERMAN_NAME, GREEN_GOBLIN_NAME)), names);
+		assertEquals("With no language preference and no tag, all values return", ALL_NAMES, names);;
 	}
 
 	@Test
 	public void getNamesWithPrefix() throws Exception {
 		RDFResource res = (RDFResource) model.getElementById(SPIDERMAN_URI);
 		Set<String> names = new HashSet<>((Collection<String>) pGetter.invoke(res, "foaf:name", context));
-		assertEquals(Collections.singleton(SPIDERMAN_NAME), names);
+		assertEquals("With no language preference and no tag, all values return", SPIDERMAN_NAMES, names);
 	}
 
 	@Test
 	public void getNamesWithDoubleColonPrefix() throws Exception {
 		RDFResource res = (RDFResource) model.getElementById(SPIDERMAN_URI);
 		Set<String> names = new HashSet<>((Collection<String>) pGetter.invoke(res, "foaf::name", context));
-		assertEquals(Collections.singleton(SPIDERMAN_NAME), names);
+		assertEquals("With no language preference and no tag, all values return", SPIDERMAN_NAMES, names);
 	}
 
 	@Test
@@ -103,7 +103,7 @@ public class RDFModelTest {
 		for (RDFLiteral l : (Collection<RDFLiteral>) pGetter.invoke(res, "foaf:name_literal", context)) {
 			names.add((String) l.getValue());
 		}
-		assertEquals(Collections.singleton(SPIDERMAN_NAME), names);
+		assertEquals("With no language preference and no tag, all values return", SPIDERMAN_NAMES, names);
 	}
 
 	@Test
