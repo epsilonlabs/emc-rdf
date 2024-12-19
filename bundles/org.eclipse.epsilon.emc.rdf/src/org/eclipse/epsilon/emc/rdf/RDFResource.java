@@ -98,7 +98,7 @@ public class RDFResource extends RDFModelElement {
 				RDFLiteral literal = (RDFLiteral) element;
 				literalsByTag.put(literal.getLanguage() == null ? "" : literal.getLanguage(), literal);
 			} else {
-				// TODO see if we run into this scenario (perhaps with integers instead of strings?), print some warning, return value as is as fallback
+				// TODO #19 see if we run into this scenario (perhaps with integers instead of strings?), print some warning, return value as is as fallback
 				throw new IllegalArgumentException("Expected RDFLiteral while filtering based on preferred languages, but got " + element);
 			}
 		}
