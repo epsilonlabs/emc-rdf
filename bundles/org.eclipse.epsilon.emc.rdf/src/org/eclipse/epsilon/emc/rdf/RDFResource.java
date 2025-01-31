@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.jena.ontology.MaxCardinalityRestriction;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -40,7 +39,7 @@ public class RDFResource extends RDFModelElement {
 		RAW, VALUES_ONLY
 	}
 
-	private Resource resource;
+	protected Resource resource;
 	
 	public RDFResource(Resource aResource, RDFModel rdfModel) {
 		super(rdfModel);
@@ -52,6 +51,19 @@ public class RDFResource extends RDFModelElement {
 	}
 
 	public Object getProperty(String property, IEolContext context) {
+		// No additional processing of property values 
+		return getCollectionOfProperyValues(property, context);		
+	}
+	
+	/*
+	 * Returns a collection of objects for property values
+	 * If the initial attempt to get property values returns null,
+	 * another attempt is made with the LITTERAL_SUFFIX removed from the property string.
+	 * 
+	 * A collection of objects is returned to enable further processing of the values returned
+	 * in the calling getProperty() method for the type of RDFResource.
+	 */
+	protected Collection<Object> getCollectionOfProperyValues(String property, IEolContext context) {
 		final RDFQualifiedName pName = RDFQualifiedName.from(property, this.owningModel::getNamespaceURI);
 		Collection<Object> value = listPropertyValues(pName, context, LiteralMode.VALUES_ONLY);
 
@@ -61,66 +73,12 @@ public class RDFResource extends RDFModelElement {
 			RDFQualifiedName withoutLiteral = pName.withLocalName(localNameWithoutSuffix);
 			value = listPropertyValues(withoutLiteral, context, LiteralMode.RAW);
 		}
-
-		// Disable this check to remove the maxCardinality limit on returned properties i.e. maxCardinality == null.
-		MaxCardinalityRestriction maxCardinality = RDFPropertyProcesses.getPropertyStatementMaxCardinalityRestriction(pName, resource);
-
-		// Check collection of rawValues is less than the MaxCardinality and prune as needed...
-		if (null != maxCardinality) {
-			if (value.size() > maxCardinality.getMaxCardinality()) {
-				System.err.println("Property [" + pName + "] has a max cardinality " + maxCardinality.getMaxCardinality()
-									+ ", raw property values list contained " + value.size()
-									+ ".\n The list of raw property values has been pruned, it contained: " + value);
-
-				value = value.stream().limit(maxCardinality.getMaxCardinality())
-						.collect(Collectors.toList());
-			}
-			if (maxCardinality.getMaxCardinality() == 1) {
-				// If the maximum cardinality is 1, return the single value (do not return a collection)
-				return value.isEmpty() ? null : value.iterator().next();
-			}
-		}
-
+		
 		return value;
 	}
 
-	protected Collection<Object> convertLiteralsToValues(Collection<Object> value) {
-		return value.stream()
-			.map(e -> e instanceof RDFLiteral ? ((RDFLiteral)e).getValue() : e)
-			.collect(Collectors.toList());
-	}
-
-	protected Collection<Object> filterByPreferredLanguage(Collection<Object> value) {
-		// If no preferred languages are specified, don't do any filtering
-		if (super.getModel().getLanguagePreference().isEmpty()) {
-			return value;
-		}
-
-		// Otherwise, group literals by language tag
-		Multimap<String, RDFLiteral> literalsByTag = HashMultimap.create();
-		for (Object element : value) {
-			if (element instanceof RDFLiteral) {
-				RDFLiteral literal = (RDFLiteral) element;
-				literalsByTag.put(literal.getLanguage() == null ? "" : literal.getLanguage(), literal);
-			} else {
-				// TODO #19 see if we run into this scenario (perhaps with integers instead of strings?), print some warning, return value as is as fallback
-				throw new IllegalArgumentException("Expected RDFLiteral while filtering based on preferred languages, but got " + element);
-			}
-		}
-
-		for (String tag : super.getModel().getLanguagePreference()) {
-			if (literalsByTag.containsKey(tag)) {
-				return new ArrayList<>(literalsByTag.get(tag));
-			}
-		}
-
-		// If we don't find any matches in the preferred languages,
-		// fall back to the untagged literals (if any).
-		Collection<RDFLiteral> rawFromUntagged = literalsByTag.get("");
-		return new ArrayList<>(rawFromUntagged);
-	}
-
-	public Collection<Object> listPropertyValues(RDFQualifiedName propertyName, IEolContext context, LiteralMode literalMode) {
+	//Returns a filtered list of property Values, with prefixes and raw value handling
+	protected Collection<Object> listPropertyValues(RDFQualifiedName propertyName, IEolContext context, LiteralMode literalMode) {
 		ExtendedIterator<Statement> itStatements; 
 		itStatements = RDFPropertyProcesses.getPropertyStatementIterator(propertyName, resource);	
 		itStatements = RDFPropertyProcesses.filterPropertyStatementsIteratorWithLanguageTag(propertyName, itStatements);
@@ -172,11 +130,48 @@ public class RDFResource extends RDFModelElement {
 		}
 	}
 
+	// Filters a collection of property values by preferred languages
+	protected Collection<Object> filterByPreferredLanguage(Collection<Object> value) {
+		// If no preferred languages are specified, don't do any filtering
+		if (super.getModel().getLanguagePreference().isEmpty()) {
+			return value;
+		}
+
+		// Otherwise, group literals by language tag
+		Multimap<String, RDFLiteral> literalsByTag = HashMultimap.create();
+		for (Object element : value) {
+			if (element instanceof RDFLiteral) {
+				RDFLiteral literal = (RDFLiteral) element;
+				literalsByTag.put(literal.getLanguage() == null ? "" : literal.getLanguage(), literal);
+			} else {
+				// TODO #19 see if we run into this scenario (perhaps with integers instead of strings?), print some warning, return value as is as fallback
+				throw new IllegalArgumentException("Expected RDFLiteral while filtering based on preferred languages, but got " + element);
+			}
+		}
+
+		for (String tag : super.getModel().getLanguagePreference()) {
+			if (literalsByTag.containsKey(tag)) {
+				return new ArrayList<>(literalsByTag.get(tag));
+			}
+		}
+
+		// If we don't find any matches in the preferred languages,
+		// fall back to the untagged literals (if any).
+		Collection<RDFLiteral> rawFromUntagged = literalsByTag.get("");
+		return new ArrayList<>(rawFromUntagged);
+	}
+	
+	protected Collection<Object> convertLiteralsToValues(Collection<Object> value) {
+		return value.stream()
+			.map(e -> e instanceof RDFLiteral ? ((RDFLiteral)e).getValue() : e)
+			.collect(Collectors.toList());
+	}
+
 	public List<RDFResource> getTypes() {
 		List<RDFResource> types = new ArrayList<>();
 		for (StmtIterator itStmt = resource.listProperties(RDF.type); itStmt.hasNext(); ) {
 			RDFNode node = itStmt.next().getObject();
-			types.add(new RDFResource((Resource) node, this.owningModel));
+			types.add(this.owningModel.createResource((Resource) node, this.owningModel));
 		}
 		return types;
 	}
@@ -189,7 +184,8 @@ public class RDFResource extends RDFModelElement {
 		if (node instanceof Literal) {
 			return new RDFLiteral((Literal) node, this.owningModel);
 		} else if (node instanceof Resource) {
-			return new RDFResource((Resource) node, this.owningModel);
+			return this.owningModel.createResource((Resource) node, this.owningModel);
+			
 		}
 		throw new IllegalArgumentException("Cannot convert " + node + " to a model object");
 	}

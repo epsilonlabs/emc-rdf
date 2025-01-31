@@ -84,6 +84,10 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	public RDFModel() {
 		this.propertyGetter = new RDFPropertyGetter(this);
 	}
+	
+	protected RDFResource createResource(Resource aResource, RDFModel aModel) {
+		return new RDFResource(aResource, aModel);
+	}
 
 	@Override
 	public Object getEnumerationValue(String enumeration, String label) throws EolEnumerationValueNotFoundException {
@@ -115,7 +119,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	public RDFResource getElementById(String uri) {
 		Resource res = model.getResource(uri);
 		if (res != null) {
-			return new RDFResource(res, this);
+			return createResource(res, this);
 		}
 		return null;
 	}
@@ -227,7 +231,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 
 		for (ResIterator it = model.listSubjects(); it.hasNext(); ) {
 			Resource stmt = it.next();
-			elems.add(new RDFResource(stmt, this));	
+			elems.add(createResource(stmt, this));
 		}
 		
 		return elems;
@@ -241,7 +245,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		ResIterator itInstances = model.listResourcesWithProperty(RDF.type, typeR);
 		List<RDFModelElement> instances = new ArrayList<>();
 		while (itInstances.hasNext()) {
-			instances.add(new RDFResource(itInstances.next(), this));
+			instances.add(createResource(itInstances.next(), this));
 		}
 
 		return instances;

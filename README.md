@@ -169,9 +169,10 @@ In order to support OWL inferencing, the `RDF Model` configuration dialog is div
 The resulting RDF data and schema models are then processed by Jena's reasoner using the default OWL settings.
 The inferred model is then used by Epsilon for querying.
 
-#### Schema-defined restrictions (maximum cardinality)
+### MOF2RDF models 
+The MOF2RDF Schema contains OWL restrictions for some properties in an RDF data model that represents a MOF model.
 
-An RDF Schema can contain OWL restrictions for some properties in an RDF data model, such as maximum cardinality.
+Using a MOF2RDF model type introduces some additional behaviours when querying RDF data. For example, a query for property values is limited when a schema-defined restrictions exists (e.g. maximum cardinality)
 
 When computing `resource.property`, if a maximum cardinality is defined for `property`, then the number of returned values will be limited to that maximum size.
 If there are multiple maximum cardinality restrictions, the most restrictive one will be used.

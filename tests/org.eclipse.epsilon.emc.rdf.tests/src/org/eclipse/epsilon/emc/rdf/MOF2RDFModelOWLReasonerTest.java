@@ -12,13 +12,12 @@
  ********************************************************************************/
 package org.eclipse.epsilon.emc.rdf;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Collection;
 
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
@@ -26,7 +25,7 @@ import org.eclipse.epsilon.eol.execute.context.EolContext;
 import org.junit.After;
 import org.junit.Test;
 
-public class RDFModelOWLReasonerTest {
+public class MOF2RDFModelOWLReasonerTest {
 
 	private static final String OWL_DEMO_DATAMODEL = "resources/OWL/owlDemoData.ttl";
 	private static final String OWL_DEMO_SCHEMAMODEL = "resources/OWL/owlDemoSchema.ttl";
@@ -36,7 +35,7 @@ public class RDFModelOWLReasonerTest {
 	private static final String URI_ALIENBOX51 = "urn:x-hp:eg/alienBox51";
 	private static final String URI_WHITEBOX = "urn:x-hp:eg/whiteBoxZX";
 
-	private RDFModel model;
+	private MOF2RDFModel model;
 	private EolContext context;
 
 	@After
@@ -56,19 +55,18 @@ public class RDFModelOWLReasonerTest {
 	public void getMotherBoardTest() {
 		loadModelDefaults();
 		RDFResource element = model.getElementById(URI_WHITEBOX);
-		@SuppressWarnings("unchecked")
-		Collection<RDFResource> motherBoardList = (Collection<RDFResource>) element.getProperty("eg:motherBoard", context);		
+		Object motherBoard = element.getProperty("eg:motherBoard", context);
+		System.out.println(motherBoard.getClass());
 		assertTrue("motherBoard has max cardinality of 1 should only have that value returned ",
-			motherBoardList.size() == 1);
+			motherBoard instanceof MOF2RDFResource);
 	}
 
 	@Test
 	public void getPropertyThatDoesNotExistAsNullTest() {
 		loadModelDefaults();
 		RDFResource element = model.getElementById(URI_ALIENBOX51);
-		@SuppressWarnings("unchecked")
-		Collection<RDFResource> motherBoardList = (Collection<RDFResource>) element.getProperty("eg:motherBoard", context);
-		assertTrue("URI_ALIENBOX51 computer does not have motherBoard ", motherBoardList.isEmpty());
+		Object motherBoard = element.getProperty("eg:motherBoard", context);
+		assertNull("URI_ALIENBOX51 computer does not have motherBoard ", motherBoard);
 	}
 
 	@Test
@@ -80,13 +78,11 @@ public class RDFModelOWLReasonerTest {
 			System.setErr(new PrintStream(errors));
 			loadModelDefaults();
 
-			// This will return all motherboards, we actually have two on URI_BIGNAME42			
-			@SuppressWarnings("unchecked")
-			Collection<RDFResource> motherBoardList = (Collection<RDFResource>) model.getElementById(URI_BIGNAME42).getProperty("eg:motherBoard", context);
-			assertTrue("URI_BIGNAME42 computer should report 2 motherBoard s ", motherBoardList.size() == 2);
+			// This will return only the first motherboard, but we actually have two
+			model.getElementById(URI_BIGNAME42).getProperty("eg:motherBoard", context);
 
 			String sErrors = errors.toString();
-			assertFalse("An error should be raised for max cardinality being exceeded",
+			assertTrue("An error should be raised for max cardinality being exceeded",
 				sErrors.contains("has a max cardinality 1, raw property values list contained"));
 		} finally {
 			System.setErr(oldErr);
@@ -96,7 +92,7 @@ public class RDFModelOWLReasonerTest {
 	// Functions not tests
 
 	protected void loadModel(String dataModelUri, String schemaModelUri, String languagePreference) throws EolModelLoadingException {
-		this.model = new RDFModel();
+		this.model = new MOF2RDFModel();
 		StringProperties props = new StringProperties();
 		props.put(RDFModel.PROPERTY_DATA_URIS, dataModelUri);
 		props.put(RDFModel.PROPERTY_SCHEMA_URIS, schemaModelUri);

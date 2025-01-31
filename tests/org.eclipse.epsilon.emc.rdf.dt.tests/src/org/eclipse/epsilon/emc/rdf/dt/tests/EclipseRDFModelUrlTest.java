@@ -16,6 +16,8 @@ package org.eclipse.epsilon.emc.rdf.dt.tests;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Collection;
+
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.emc.rdf.RDFModel;
 import org.eclipse.epsilon.emc.rdf.RDFResource;
@@ -144,11 +146,12 @@ public class EclipseRDFModelUrlTest extends EclipseProjectEnvTest {
 	private void loadedModelTest() {
 		assertTrue(model != null);
 		RDFResource element = model.getElementById(URI_WHITEBOX);
-		Object motherBoard = element.getProperty("eg:motherBoard", context);
+		@SuppressWarnings("unchecked")
+		Collection<RDFResource> motherBoardList = (Collection<RDFResource>) element.getProperty("eg:motherBoard", context);		
 		assertTrue("motherBoard has max cardinality of 1 should only have that value returned ",
-			motherBoard instanceof RDFResource);
+			motherBoardList.size() == 1);
 	}
-
+	
 	private void copyModelFiles() throws Exception {
 		super.copyIntoProject(OWL_DEMO_DATAMODEL, OWL_DEMO_DATAMODEL_PROJECT_PATH);
 		super.copyIntoProject(OWL_DEMO_SCHEMAMODEL, OWL_DEMO_SCHEMAMODEL_PROJECT_PATH);
