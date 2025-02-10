@@ -97,6 +97,7 @@ public class MOF2RDFModelOWLReasonerTest {
 		props.put(RDFModel.PROPERTY_DATA_URIS, dataModelUri);
 		props.put(RDFModel.PROPERTY_SCHEMA_URIS, schemaModelUri);
 		props.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE, languagePreference);
+		props.put(RDFModel.PROPERTY_VALIDATE_MODEL, false);
 		model.load(props);
 
 		this.context = new EolContext();

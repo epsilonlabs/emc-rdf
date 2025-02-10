@@ -49,7 +49,7 @@ import org.eclipse.swt.widgets.Text;
 
 public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialog {
 	private static final String[] RDFFILE_EXTENSIONS = new String[] { "*.rdf", "*.ttl", "*.nt", "*.nq", "*.trig", "*.owl", "*.jsonld", "*.trdf", "*.rt", "*.rpb", "*.pbrdf", "*.rj", "*.trix", "*.*"};
-
+	
 	private static final String SAMPLE_URL = "http://changeme";
 
 	protected class PrefixEditingSupport extends EditingSupport {
@@ -185,6 +185,9 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		return "RDF";
 	}
 
+	//
+	// Ordering of Groups in Dialogue window
+	
 	@Override
 	protected void createGroups(Composite control) {
 		createNameAliasGroup(control);
@@ -192,6 +195,7 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		createSchemaModelRDFUrlsGroup(control);
 		createNamespaceMappingGroup(control);
 		createLanguagePreferenceGroup(control);
+		createValidateModelGroup(control);
 	}
 
 	private Composite createNamespaceMappingGroup(Composite parent) {
@@ -490,7 +494,6 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 	
 	protected Label languagePreferenceLabel;
 	protected Text languagePreferenceText;
-
 	private Composite createLanguagePreferenceGroup(Composite parent) {
 		final Composite groupContent = DialogUtil.createGroupContainer(parent, "Language tag preference", 1);
 		
@@ -511,7 +514,24 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		return groupContent;
 	}
 	
-	@Override
+	
+	protected String validateModel;
+
+	protected Button validateModelCheckBox;
+	private Composite createValidateModelGroup(Composite parent) {
+		final Composite groupContent = DialogUtil.createGroupContainer(parent, "Model validation", 1);
+
+		validateModelCheckBox = new Button(groupContent, SWT.CHECK);
+		validateModelCheckBox.setText("Run Jena's model validation on loaded models");
+		boolean isJenaValidationEnabled = RDFModel.VALIDATION_SELECTION_JENA.equals(validateModel);
+		validateModelCheckBox.setSelection(isJenaValidationEnabled);
+
+		groupContent.layout();
+		groupContent.pack();
+		return groupContent;
+	}
+	
+	@Override	
 	protected void loadProperties(){
 		super.loadProperties();
 		if (properties == null) return;
@@ -544,7 +564,11 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		}
 		
 		languagePreferenceText.setText(properties.getProperty(RDFModel.PROPERTY_LANGUAGE_PREFERENCE));
-
+		
+		// Load any saved property and default to Jena if none
+		validateModel = properties.getProperty(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.VALIDATION_SELECTION_JENA);
+		validateModelCheckBox.setSelection(RDFModel.VALIDATION_SELECTION_JENA.equals(validateModel));
+		
 		this.dataModelUrlListViewer.refresh();
 		this.schemaModelUrlListViewer.refresh();
 		this.nsMappingTable.refresh();
@@ -572,6 +596,12 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		
 		properties.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE,
 				languagePreferenceText.getText().replaceAll("\\s", ""));
+		
+		if (validateModelCheckBox.getSelection()) {
+			properties.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.VALIDATION_SELECTION_JENA);
+		} else {
+			properties.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.VALIDATION_SELECTION_NONE);
+		}
 	}
 
 	protected void validateForm() {

@@ -201,8 +201,8 @@ public class CommonQueryTest<T extends RDFModel> {
 			"foaf:Person",
 			model.getTypeNameOf(firstPerson));
 		
-		assertEquals("The model should only report the Person type and the rdfs Resource",
-				new HashSet<>(Arrays.asList("foaf:Person", "rdfs:Resource")),
+		assertEquals("The model should only report the foaf Person, rdfs Resource and owl Thing",
+				new HashSet<>(Arrays.asList("foaf:Person", "rdfs:Resource", "owl:Thing")),
 				new HashSet<>(model.getAllTypeNamesOf(firstPerson)));		
 	}
 

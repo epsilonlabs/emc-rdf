@@ -1,0 +1,19 @@
+@prefix : <urn:x-hp:eg/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+:alienBox51 a :GamingComputer .
+
+:bigName42 a :Computer ;
+    :bundle :binNameSpecialBundle ;
+    :motherBoard :bigNameSpecialMB .
+
+:whiteBoxZX a :Computer ;
+    :bundle :actionPack ;
+    :motherBoard :nForce .
+
+:actionPack a :GameBundle .
+
+:bigNameSpecialMB owl:differentFrom :nForce2 .
+
+:unknownMB :hasGraphics :gamingGraphics .
+
