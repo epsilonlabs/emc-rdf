@@ -1,0 +1,17 @@
+for (p in Person.all) {
+  p.name.println('name: ');
+  p.enemyOf.println('enemies: ');
+
+  // Escaping into RDF for a non-EMF property
+  var rdfRes = Model.resource.getRDFResource(p);
+  var itProp = rdfRes.listProperties;
+  while (itProp.hasNext()) {
+    var p = itProp.next();
+    if (p.predicate.localName = 'characterType') {
+      p.object.println('characterType: ');
+      break;
+    }
+  }
+
+  ''.println();
+}

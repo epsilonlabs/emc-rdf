@@ -19,7 +19,7 @@ public class ResourceExample {
 		factoryRegistry.getExtensionToFactoryMap().put("emf", new EmfaticResourceFactory());
 
 		EmfModel emfModel = new EmfModel();
-		emfModel.setModelFile("models/example.rdfres");
+		emfModel.setModelFile(args[0]);
 		emfModel.setMetamodelFiles(Arrays.asList("models/book.emf", "models/fiction.emf"));
 		emfModel.setName("Model");
 		emfModel.setReadOnLoad(true);
