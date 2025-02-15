@@ -100,6 +100,8 @@ location "http://download.eclipse.org/epsilon/updates/2.5/" {
 	org.eclipse.epsilon.eol.engine lazy
 	org.eclipse.epsilon.eol.dt lazy
 	org.eclipse.epsilon.core.feature.feature.group lazy
+	org.eclipse.epsilon.emc.emf lazy
+	org.eclipse.epsilon.emc.emf.dt lazy
 
     /*
      * These are for the examples - not really needed for the driver.
