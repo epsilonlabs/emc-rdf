@@ -16,7 +16,6 @@ import java.util.function.Supplier;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.rdf.model.AnonId;
 import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.RDFVisitor;
 import org.apache.jena.rdf.model.ResIterator;
