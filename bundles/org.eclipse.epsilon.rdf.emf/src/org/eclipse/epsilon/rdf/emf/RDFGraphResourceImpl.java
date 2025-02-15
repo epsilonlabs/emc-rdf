@@ -1,5 +1,6 @@
 package org.eclipse.epsilon.rdf.emf;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -56,6 +57,13 @@ public class RDFGraphResourceImpl extends ResourceImpl {
 
 	@Override
 	protected void doLoad(InputStream inputStream, Map<?, ?> options) throws IOException {
+		if (this.getURI().isRelative()) {
+			// If the given URI is relative, resolve it against the current working directory
+			String absoluteCwd = new File(".").getAbsolutePath();
+			URI resolvedAgainstCwd = this.getURI().resolve(URI.createFileURI(absoluteCwd));
+			this.setURI(resolvedAgainstCwd);
+		}
+
 		// The custom classloader constructor is needed for OSGi compatibility
 		CustomClassLoaderConstructor constructor = new CustomClassLoaderConstructor(this.getClass().getClassLoader(), new LoaderOptions());
 		this.config = new Yaml(constructor).loadAs(inputStream, RDFResourceConfiguration.class);
