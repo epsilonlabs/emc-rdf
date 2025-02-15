@@ -19,6 +19,7 @@ import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.RDFVisitor;
+import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
@@ -56,11 +57,11 @@ public class RDFDeserializer {
 	 * the {@code ontModel}.
 	 */
 	public void deserialize(OntModel ontologyModel) {
-		// Phase 1: create objects and their attributes
-		for (NodeIterator it = ontologyModel.listObjects(); it.hasNext(); ) {
-			RDFNode node = it.next();
-			if (node.isResource() && !node.isAnon()) {
-				deserializeObjectAttributes(node.asResource());
+		// Phase 1: find all sources of an rdf:type edge
+		for (ResIterator it = ontologyModel.listResourcesWithProperty(RDF.type); it.hasNext(); ) {
+			Resource res = it.next();
+			if (!res.isAnon()) {
+				deserializeObjectAttributes(res);
 			}
 		}
 

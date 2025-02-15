@@ -18,3 +18,9 @@
     a spid:Person ;
     spid:name "Spiderman" ;
     story:characterType "Hero" .
+
+<#captain>
+    a spid:Person ;
+    story:friendOf <#spiderman> ;
+    spid:name "Captain America" ;
+    story:characterType "Hero" .
