@@ -21,6 +21,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.InfModel;
@@ -86,8 +88,13 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		this.reasonerType = rdfsReasonerType;
 	}
 
+	
 	protected final List<String> schemaURIs = new ArrayList<>();
+	protected Dataset schemaModelSet;	// DefaultModel empty, using NamedModels
+	
 	protected final List<String> dataURIs = new ArrayList<>();
+	protected Dataset dataModelSet;		// DefaultModel empty, using NamedModels
+	
 	protected OntModel model;
 
 	public RDFModel() {
@@ -326,36 +333,36 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 			}
 
 			// Read all the URIs into an integrated model
-			Model schemaModel = ModelFactory.createDefaultModel();
-			for (Iterator<String> itUri = schemaURIs.iterator(); itUri.hasNext(); ) {
-				schemaModel.read(itUri.next());
-			}
+			
+			schemaModelSet = DatasetFactory.createNamed(schemaURIs);
+			Model schemaUnionModel = schemaModelSet.getUnionModel(); // READ-ONLY
 
 			// If a schema model has been loaded assume need for a reasoner using Jena's default OWL
-			if (schemaModel.size() >= 0 && reasonerType == ReasonerType.NONE) {
+			if (schemaURIs.size() >= 0 && reasonerType == ReasonerType.NONE) {
 				this.setReasonerType(ReasonerType.OWL_FULL);
 			}
 
-			Model dataModel = ModelFactory.createDefaultModel();
-			for (Iterator<String> itUri = dataURIs.iterator(); itUri.hasNext(); ) {
-				dataModel.read(itUri.next());
-			}
+			dataModelSet = DatasetFactory.createNamed(dataURIs);
+			Model dataUnionModel = dataModelSet.getUnionModel(); // READ-ONLY
 
 			//Create an OntModel to handle the data model being loaded or inferred from data and schema
 			if (reasonerType == ReasonerType.NONE) {
 				// Only the OntModel bits are added to the dataModel being loaded.
-				this.model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, dataModel);
+				this.model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, dataUnionModel);
 			} else {
 				// OntModel bits are added and the reasoner will add schema bits to the dataModel being loaded.
 				Reasoner reasoner = ReasonerRegistry.getOWLReasoner();
-				InfModel infmodel = ModelFactory.createInfModel(reasoner, schemaModel, dataModel);
+				InfModel infmodel = ModelFactory.createInfModel(reasoner, schemaUnionModel, dataUnionModel);
 				this.model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, infmodel);
 			}
 
-			// Copy the Name prefix maps from the loaded Model dataModel to the new OntModel dataModel representation
+		// Copy the Name prefix maps from the loaded Model dataModel to the new OntModel dataModel representation
+		//	May not need this now...
+			/* 
 			for (Entry<String, String> e : dataModel.getNsPrefixMap().entrySet()) {
 				this.model.setNsPrefix(e.getKey(), e.getValue());
 			}
+			*/
 		} catch (Exception ex) {
 			throw new EolModelLoadingException(ex, this);
 		}
