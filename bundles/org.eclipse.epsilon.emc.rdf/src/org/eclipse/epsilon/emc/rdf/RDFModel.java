@@ -12,6 +12,9 @@
  ********************************************************************************/
 package org.eclipse.epsilon.emc.rdf;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,6 +39,8 @@ import org.apache.jena.reasoner.Reasoner;
 import org.apache.jena.reasoner.ReasonerRegistry;
 import org.apache.jena.reasoner.ValidityReport;
 import org.apache.jena.reasoner.ValidityReport.Report;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.eol.exceptions.EolRuntimeException;
@@ -241,15 +246,60 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 			}
 		}
 	}
-
+		
+	private void storeDataNamedModel (String namedModelURI, String saveLocationURI) throws IOException {
+		// Assumes the NamedModelURI is for a model in the dataset and locationURI be saved to
+	
+		Model modelToSave = dataModelSet.getNamedModel(namedModelURI);
+		Lang lang = RDFDataMgr.determineLang(namedModelURI, namedModelURI, null);
+		
+	    try (OutputStream out = new FileOutputStream(saveLocationURI)) {
+	    	RDFDataMgr.write(out, modelToSave, lang);
+	    	out.close();	
+	    } 
+	}
+	
 	@Override
 	public boolean store(String location) {
-		throw new UnsupportedOperationException();
+		// Save models to new URIs using the location given and namedModel filename
+		// iterate over URIs, write the dataset named models back to new storage URI with format detected by Jena
+		
+		System.out.println("location: " + location);
+		if (!location.endsWith("/"))
+		{
+			location = location + "/";
+			System.out.println("fixed locations: " + location);
+		}			
+		
+		for (String uri : dataURIs) {
+			String fileName = uri.substring(uri.lastIndexOf('/') + 1);
+			String newUri = location + fileName;
+			try {
+				storeDataNamedModel(uri, newUri);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}			
+			//System.out.println("dataURI: " + uri + "dataURI file name: " + fileName	+ "new Location and fileName: " + newUri );			
+		}
+		return true;
 	}
 
 	@Override
 	public boolean store() {
-		throw new UnsupportedOperationException();
+		// Save back to original URI
+		// iterate over URIs, write the dataset named models back to storage with format detected by Jena
+		for (String uri : dataURIs) {
+			try {
+				storeDataNamedModel(uri, uri);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override
