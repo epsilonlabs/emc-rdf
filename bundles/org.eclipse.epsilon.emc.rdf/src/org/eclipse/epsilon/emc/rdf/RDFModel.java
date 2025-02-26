@@ -100,7 +100,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	protected final List<String> dataURIs = new ArrayList<>();
 	protected Dataset dataModelSet;		// DefaultModel empty, using NamedModels
 	
-	protected OntModel model;
+	protected OntModel model;	// read-only
 
 	public RDFModel() {
 		this.propertyGetter = new RDFPropertyGetter(this);
@@ -381,8 +381,6 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 			if (dataURIs.isEmpty()) {
 				throw new IllegalStateException("No file path has been set");
 			}
-
-			// Read all the URIs into an integrated model
 			
 			schemaModelSet = DatasetFactory.createNamed(schemaURIs);
 			Model schemaUnionModel = schemaModelSet.getUnionModel(); // READ-ONLY
@@ -406,13 +404,6 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 				this.model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, infmodel);
 			}
 
-		// Copy the Name prefix maps from the loaded Model dataModel to the new OntModel dataModel representation
-		//	May not need this now...
-			/* 
-			for (Entry<String, String> e : dataModel.getNsPrefixMap().entrySet()) {
-				this.model.setNsPrefix(e.getKey(), e.getValue());
-			}
-			*/
 		} catch (Exception ex) {
 			throw new EolModelLoadingException(ex, this);
 		}
