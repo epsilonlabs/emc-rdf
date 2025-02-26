@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
-import org.eclipse.epsilon.eol.models.Model;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +43,7 @@ public class StoreModelTest {
 	private static final String OWL_DEMO_DATAMODEL_VALID = OWL_DEMO_FOLDER + "owlDemoData_valid.ttl";
 	private static final String OWL_DEMO_SCHEMAMODEL = OWL_DEMO_FOLDER + "owlDemoSchema.ttl";
 
-	private static final String SCRATCH_FOLDER_SHORT = "resource/storeTest";
+	private static final String SCRATCH_FOLDER_SHORT = "resources/storeTest";
 	private static final String SCRATCH_FOLDER = "resources/storeTest/";
 	private static final String SCRATCH_FOLDER_DATAMODEL_INVALID = SCRATCH_FOLDER + "owlDemoData.ttl";
 	private static final String SCRATCH_FOLDER_DATAMODEL_VALID = SCRATCH_FOLDER + "owlDemoData_valid.ttl";
@@ -93,12 +92,14 @@ public class StoreModelTest {
 
 		originalModel.store(SCRATCH_FOLDER);
 
-		loadCopyModel();
+
 		
 		assertTrue("Missing file "+SCRATCH_FOLDER_DATAMODEL_VALID, 
 				Files.exists(Paths.get(SCRATCH_FOLDER_DATAMODEL_VALID)));
 		assertTrue("Missing file "+SCRATCH_FOLDER_DATAMODEL_INVALID, 
 				Files.exists(Paths.get(SCRATCH_FOLDER_DATAMODEL_INVALID)));
+
+		loadCopyModel();
 		assertTrue("Size of the Original and Copy are not the same ",
 				originalModel.allContents().size() == copyModel.allContents().size());
 		
@@ -109,7 +110,7 @@ public class StoreModelTest {
 
 		loadOriginalModel();
 
-		originalModel.store(SCRATCH_FOLDER_SHORT);  // missing the last / 
+		originalModel.store(SCRATCH_FOLDER_SHORT);  // missing the last / which should get fixed
 		
 		assertTrue("Missing file "+SCRATCH_FOLDER_DATAMODEL_VALID, 
 				Files.exists(Paths.get(SCRATCH_FOLDER_DATAMODEL_VALID)));
