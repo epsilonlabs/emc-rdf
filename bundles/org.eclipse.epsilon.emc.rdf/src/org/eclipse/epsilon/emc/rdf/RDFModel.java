@@ -95,10 +95,10 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 
 	
 	protected final List<String> schemaURIs = new ArrayList<>();
-	protected Dataset schemaModelSet;	// DefaultModel empty, using NamedModels
+	protected Dataset schemaModelSet = DatasetFactory.create();		// DefaultModel empty, using NamedModels
 	
 	protected final List<String> dataURIs = new ArrayList<>();
-	protected Dataset dataModelSet;		// DefaultModel empty, using NamedModels
+	protected Dataset dataModelSet = DatasetFactory.create();		// DefaultModel empty, using NamedModels
 	
 	protected OntModel model;	// read-only
 
@@ -248,27 +248,32 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	}
 		
 	private void storeDataNamedModel (String namedModelURI, String saveLocationURI) throws IOException {
-		// Assumes the NamedModelURI is for a model in the dataset and locationURI be saved to
+		// NamedModelURI is a model in the dataset and locationURI be saved to
 	
-		Model modelToSave = dataModelSet.getNamedModel(namedModelURI);
-		Lang lang = RDFDataMgr.determineLang(namedModelURI, namedModelURI, null);
-		
-	    try (OutputStream out = new FileOutputStream(saveLocationURI)) {
-	    	RDFDataMgr.write(out, modelToSave, lang);
-	    	out.close();	
-	    } 
+		if (dataModelSet.containsNamedModel(namedModelURI))
+		{
+			Model modelToSave = dataModelSet.getNamedModel(namedModelURI);
+
+			Lang lang = RDFDataMgr.determineLang(namedModelURI, namedModelURI, Lang.TTL);  // Hint becomes default
+
+			try (OutputStream out = new FileOutputStream(saveLocationURI)) {
+				RDFDataMgr.write(out, modelToSave, lang);
+				out.close();
+			}
+		}
 	}
 	
 	@Override
 	public boolean store(String location) {
-		// Save models to new URIs using the location given and namedModel filename
-		// iterate over URIs, write the dataset named models back to new storage URI with format detected by Jena
+		/*
+		 * Save models to new URIs using the location given and namedModel filename
+		 * iterate over URIs, write the dataset named models back to new storage URI
+		 * with format detected by Jena
+		 */
 		
-		System.out.println("location: " + location);
 		if (!location.endsWith("/"))
 		{
-			location = location + "/";
-			System.out.println("fixed locations: " + location);
+			location = location.concat("/");
 		}			
 		
 		for (String uri : dataURIs) {
@@ -277,24 +282,24 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 			try {
 				storeDataNamedModel(uri, newUri);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
 			}			
-			//System.out.println("dataURI: " + uri + "dataURI file name: " + fileName	+ "new Location and fileName: " + newUri );			
 		}
 		return true;
 	}
 
 	@Override
 	public boolean store() {
-		// Save back to original URI
-		// iterate over URIs, write the dataset named models back to storage with format detected by Jena
+		/*
+		 * Save back to original URI iterate over URIs, write the dataset named models
+		 * back to storage with format detected by Jena
+		 */
+
 		for (String uri : dataURIs) {
 			try {
 				storeDataNamedModel(uri, uri);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return false;
 			}
