@@ -52,11 +52,11 @@ public class StoreModelTest {
 
 	private static final String TEST_STRING = "#THIS_TEXT_SHOULD_VANISH";
 
-	private RDFModel originalModel;
+	private RDFModel originalModel;  // In resources/OWL (do not overwrite)
 
-	private RDFModel copyModel;
+	private RDFModel copyModel; // In resources/storeTest
 
-	private RDFModel reloadCopyModel;
+	private RDFModel reloadCopyModel; // Used for reloading the copyModel after store()
 	
 	@Before
 	public void setup() throws IOException {
@@ -77,22 +77,11 @@ public class StoreModelTest {
 	}
 
 	@Test
-	public void testEnvFileSystemTest() throws IOException {
-		Path source = Paths.get(OWL_DEMO_DATAMODEL_INVALID);
-		Path destination = copyFileToScratchFolder(source);
-		assertTrue("File copy failed", Files.exists(destination));
-		clearScratchFolder();
-		assertFalse("Clear Scratch Folder failed", Files.exists(destination));
-	}
-
-	@Test
 	public void loadSaveNewLocation() throws EolModelLoadingException, IOException {
 
 		loadOriginalModel();
 
 		originalModel.store(SCRATCH_FOLDER);
-
-
 		
 		assertTrue("Missing file "+SCRATCH_FOLDER_DATAMODEL_VALID, 
 				Files.exists(Paths.get(SCRATCH_FOLDER_DATAMODEL_VALID)));
@@ -100,6 +89,7 @@ public class StoreModelTest {
 				Files.exists(Paths.get(SCRATCH_FOLDER_DATAMODEL_INVALID)));
 
 		loadCopyModel();
+		
 		assertTrue("Size of the Original and Copy are not the same ",
 				originalModel.allContents().size() == copyModel.allContents().size());
 		
@@ -118,6 +108,7 @@ public class StoreModelTest {
 				Files.exists(Paths.get(SCRATCH_FOLDER_DATAMODEL_INVALID)));
 		
 		loadCopyModel();
+		
 		assertTrue("Size of the Original and Copy are not the same ",
 				originalModel.allContents().size() == copyModel.allContents().size());
 		
@@ -131,6 +122,7 @@ public class StoreModelTest {
 		folderWalkCopy(OWL_DEMO_FOLDER, SCRATCH_FOLDER);
 
 		loadCopyModel();
+		
 		assertTrue("Size of the Original and Copy are not the same ",originalModel.allContents().size() == copyModel.allContents().size());
 		
 		// Insert a comment at the end of both copied model files
@@ -138,6 +130,7 @@ public class StoreModelTest {
 		Files.writeString(Paths.get(SCRATCH_FOLDER_DATAMODEL_INVALID),TEST_STRING,StandardOpenOption.APPEND);
 		String dmvFileContentBefore = Files.readString(Paths.get(SCRATCH_FOLDER_DATAMODEL_VALID));
 		String dmiFileContentBefore = Files.readString(Paths.get(SCRATCH_FOLDER_DATAMODEL_INVALID));
+		
 		assertTrue("The test String comment was not added.",dmvFileContentBefore.contains(TEST_STRING));
 		assertTrue("The test String comment was not added.",dmiFileContentBefore.contains(TEST_STRING));
 		
@@ -147,6 +140,7 @@ public class StoreModelTest {
 		// Check the comment on the end of the both files has been removed by the store()
 		String dmvFileContentAfter = Files.readString(Paths.get(SCRATCH_FOLDER_DATAMODEL_VALID));
 		String dmiFileContentAfter = Files.readString(Paths.get(SCRATCH_FOLDER_DATAMODEL_INVALID));
+		
 		assertFalse("The test String comment was not added.",dmvFileContentAfter.contains(TEST_STRING));
 		assertFalse("The test String comment was not added.",dmiFileContentAfter.contains(TEST_STRING));
 		
@@ -161,16 +155,17 @@ public class StoreModelTest {
 	
 	@Test
 	public void callStoreOnModelWithNoURIs() throws IOException {
+		
 		try {
 			originalModel.store();
 		} catch (Exception e) {
-			fail("store() with no URIs should do nothing" + e);
+			fail("store() with no URIs should not generate an Exception" + e);
 		}
 		
 		try {
 			originalModel.store(SCRATCH_FOLDER);
 		} catch (Exception e) {
-			fail("store(String location) with no URIs should do nothing" + e);
+			fail("store(String location) with no URIs should not generate and Exception" + e);
 		}
 		
 		try (Stream<Path> walk = Files.walk(SCRATCH_PATH)) {
@@ -183,20 +178,28 @@ public class StoreModelTest {
 	public void storeModelBeforeLoadingOrCreating () throws IOException {
 		@SuppressWarnings("resource")
 		RDFModel newModel = new RDFModel();	
+		
 		newModel.setDataUri(SCRATCH_FOLDER_DATAMODEL_VALID);
+		
 		newModel.store();
-		Stream<Path> walk = Files.walk(SCRATCH_PATH);
+		
 		assertTrue("A data URI property is set, but the dataset should not contain a Named Model for it", 
 				Files.notExists(Paths.get(SCRATCH_FOLDER_DATAMODEL_VALID)));
-		assertEquals("Walk counted unexpected files/folders", 1, walk.count());
+		
+		try (Stream<Path> walk = Files.walk(SCRATCH_PATH)) {	
+			assertEquals("Walk counted unexpected files/folders", 1 , walk.count());
+		}
 	}
 	
 	@Test
 	public void storeLocationModelBeforeLoadingOrCreating () throws IOException {
 		@SuppressWarnings("resource")
 		RDFModel newModel = new RDFModel();	
+		
 		newModel.setDataUri(SCRATCH_FOLDER_DATAMODEL_VALID);
+		
 		newModel.store(SCRATCH_FOLDER);
+
 		assertTrue("A data URI property is set, but the dataset should not contain a Named Model for it", 
 				Files.notExists(Paths.get(SCRATCH_FOLDER_DATAMODEL_VALID)));
 
@@ -205,6 +208,18 @@ public class StoreModelTest {
 		}
 	}
 
+	@Test
+	public void testEnvFileSystemTest() throws IOException {
+		// Failures may indicate a test environment issue like the file system is read-only
+		Path source = Paths.get(OWL_DEMO_DATAMODEL_INVALID);
+		Path destination = copyFileToScratchFolder(source);
+		
+		assertTrue("File copy to the Scratch Folder failed", Files.exists(destination));
+		
+		clearScratchFolder();
+		
+		assertFalse("Clear Scratch Folder failed", Files.exists(destination));
+	}
 	
 	
 
@@ -223,16 +238,6 @@ public class StoreModelTest {
 		originalModel.load(propsOriginalModel);
 	}
 	
-	private void reloadCopyModel() throws EolModelLoadingException {	
-		StringProperties propsReloadCopyModel = new StringProperties();
-		propsReloadCopyModel.put(RDFModel.PROPERTY_DATA_URIS, SCRATCH_FOLDER_DATAMODEL_VALID 
-				+ "," + SCRATCH_FOLDER_DATAMODEL_INVALID);			
-		propsReloadCopyModel.put(RDFModel.PROPERTY_SCHEMA_URIS, OWL_DEMO_SCHEMAMODEL);
-		propsReloadCopyModel.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE, LANGUAGE_PREFERENCE_EN_STRING);
-		propsReloadCopyModel.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.VALIDATION_SELECTION_NONE);
-		reloadCopyModel.load(propsReloadCopyModel);
-	}
-
 	private void loadCopyModel() throws EolModelLoadingException {
 		StringProperties propsCopyModel = new StringProperties();
 		propsCopyModel.put(RDFModel.PROPERTY_DATA_URIS, SCRATCH_FOLDER_DATAMODEL_VALID 
@@ -241,6 +246,16 @@ public class StoreModelTest {
 		propsCopyModel.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE, LANGUAGE_PREFERENCE_EN_STRING);
 		propsCopyModel.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.VALIDATION_SELECTION_NONE);
 		copyModel.load(propsCopyModel);
+	}
+	
+	private void reloadCopyModel() throws EolModelLoadingException {	
+		StringProperties propsReloadCopyModel = new StringProperties();
+		propsReloadCopyModel.put(RDFModel.PROPERTY_DATA_URIS, SCRATCH_FOLDER_DATAMODEL_VALID 
+				+ "," + SCRATCH_FOLDER_DATAMODEL_INVALID);			
+		propsReloadCopyModel.put(RDFModel.PROPERTY_SCHEMA_URIS, OWL_DEMO_SCHEMAMODEL);
+		propsReloadCopyModel.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE, LANGUAGE_PREFERENCE_EN_STRING);
+		propsReloadCopyModel.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.VALIDATION_SELECTION_NONE);
+		reloadCopyModel.load(propsReloadCopyModel);
 	}
 
 	private void checkScratchFolder() throws IOException {
