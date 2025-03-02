@@ -5,6 +5,8 @@ This is a prototype of an [Epsilon Model Connectivity](https://eclipse.dev/epsil
 This document provides instructions for users.
 For instructions on how to set up a development environment, please see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 
+This project also includes a prototype of an EMF resource implementation for RDF graphs, on top of Apache Jena: see [`RESOURCE.md`](./RESOURCE.md) for details.
+
 ## Features and limitations
 
 Currently, the driver can:
