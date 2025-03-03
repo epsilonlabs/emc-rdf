@@ -268,7 +268,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 	Function <String, String> newLocation = uri -> locationPrefix + uri.substring(uri.lastIndexOf('/') + 1);
 	Function <String, String> sameLocation = uri -> uri;
 	
-	protected boolean store(Function <String, String> mapper) {		
+	private boolean store(Function <String, String> mapper) {		
 		for (String uri : dataURIs) {
 			try {
 				storeDataNamedModel(uri, mapper.apply(uri));
