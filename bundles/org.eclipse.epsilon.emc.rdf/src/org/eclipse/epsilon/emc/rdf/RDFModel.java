@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
@@ -263,6 +264,22 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		}
 	}
 	
+	private String locationPrefix;
+	Function <String, String> newLocation = uri -> locationPrefix + uri.substring(uri.lastIndexOf('/') + 1);
+	Function <String, String> sameLocation = uri -> uri;
+	
+	protected boolean store(Function <String, String> mapper) {		
+		for (String uri : dataURIs) {
+			try {
+				storeDataNamedModel(uri, mapper.apply(uri));
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	@Override
 	public boolean store(String location) {
 		/*
@@ -270,23 +287,12 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		 * iterate over URIs, write the dataset named models back to new storage URI
 		 * with format detected by Jena
 		 */
-		
 		if (!location.endsWith("/"))
 		{
 			location = location.concat("/");
 		}			
-		
-		for (String uri : dataURIs) {
-			String fileName = uri.substring(uri.lastIndexOf('/') + 1);
-			String newUri = location + fileName;
-			try {
-				storeDataNamedModel(uri, newUri);
-			} catch (IOException e) {
-				e.printStackTrace();
-				return false;
-			}			
-		}
-		return true;
+		locationPrefix = location;
+		return store(newLocation);
 	}
 
 	@Override
@@ -295,16 +301,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		 * Save back to original URI iterate over URIs, write the dataset named models
 		 * back to storage with format detected by Jena
 		 */
-
-		for (String uri : dataURIs) {
-			try {
-				storeDataNamedModel(uri, uri);
-			} catch (IOException e) {
-				e.printStackTrace();
-				return false;
-			}
-		}
-		return true;
+		return store(sameLocation);
 	}
 
 	@Override
