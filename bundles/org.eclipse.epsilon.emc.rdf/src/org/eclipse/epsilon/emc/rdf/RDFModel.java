@@ -264,10 +264,6 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		}
 	}
 	
-	private String locationPrefix;
-	Function <String, String> newLocation = uri -> locationPrefix + uri.substring(uri.lastIndexOf('/') + 1);
-	Function <String, String> sameLocation = uri -> uri;
-	
 	private boolean store(Function <String, String> mapper) {		
 		for (String uri : dataURIs) {
 			try {
@@ -291,8 +287,8 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		{
 			location = location.concat("/");
 		}			
-		locationPrefix = location;
-		return store(newLocation);
+		String locationPrefix = location;
+		return store(uri -> locationPrefix + uri.substring(uri.lastIndexOf('/') + 1));
 	}
 
 	@Override
@@ -301,7 +297,7 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		 * Save back to original URI iterate over URIs, write the dataset named models
 		 * back to storage with format detected by Jena
 		 */
-		return store(sameLocation);
+		return store(uri -> uri);
 	}
 
 	@Override
