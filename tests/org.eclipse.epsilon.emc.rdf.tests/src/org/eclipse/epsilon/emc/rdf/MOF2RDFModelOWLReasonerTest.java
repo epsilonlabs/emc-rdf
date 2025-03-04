@@ -18,6 +18,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collection;
 
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
@@ -56,9 +57,28 @@ public class MOF2RDFModelOWLReasonerTest {
 		loadModelDefaults();
 		RDFResource element = model.getElementById(URI_WHITEBOX);
 		Object motherBoard = element.getProperty("eg:motherBoard", context);
-		System.out.println(motherBoard.getClass());
 		assertTrue("motherBoard has max cardinality of 1 should only have that value returned ",
 			motherBoard instanceof MOF2RDFResource);
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Test
+	public void getMotherBoardNoPrefixTest() {
+		loadModelDefaults();
+		RDFResource element = model.getElementById(URI_WHITEBOX);
+		
+		ByteArrayOutputStream errors = new ByteArrayOutputStream();
+		context.setWarningStream(new PrintStream(errors));
+		
+		Collection<MOF2RDFResource> motherBoard = 
+				(Collection<MOF2RDFResource>) element.getProperty("motherBoard", context);
+
+		assertTrue("2 motherboards should have been reported, with no restrictions ", 2 == motherBoard.size());
+
+		String sErrors = errors.toString();
+		assertTrue("An error should be raised Ambiguous property access turning off restriction checks",
+				sErrors.contains("No restriction checks applied"));
+ 		
 	}
 
 	@Test
