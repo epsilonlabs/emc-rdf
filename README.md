@@ -160,16 +160,27 @@ Data and schema models can be loaded using `platform:/` URLs when using the driv
 
 ### Data models, schema models and reasoners
 
-RDF models are loaded as Ontology Resource Models with Jena's default OWL reasoner.
-This reasoner infers OWL concepts onto an RDF data model when it is loaded.
+RDF data and schema models (configured URIs) are handled using Jena `Dataset`s.
+The models in the datasets are combined into *union models*: separate union models are used for the data and schema models.
+An *inference model* is created from the union models with Jena's default OWL reasoner, and presented as an *ontology model* in the EMC-REF driver.
 
 In order to support OWL inferencing, the `RDF Model` configuration dialog is divided into two sections:
 
-* "Data Model URLs to load": each of the elements in the list is loaded and merged into a single RDF data model.
-* "Schema Model URLs to load": each element is merged into a single RDF schema model.
+* "Data Model URLs to load": the elements are merged into a single RDF data model, as a union model.
+* "Schema Model URLs to load": the elements are merged into a single RDF schema model, as a union model.
 
 The resulting RDF data and schema models are then processed by Jena's reasoner using the default OWL settings.
-The inferred model is then used by Epsilon for querying.
+The inferred model is then wrapped as an ontology model which used by Epsilon for querying.
+
+### Storing RDF models
+
+The `store` method is available on the EMC-RDF driver to save RDF Models to the same or different URIs.
+When `store` is called, all the data models (not schema) are written to storage.
+A new URI location (folder) can be provided to the store method to save all data models to a new location.
+When saving data models to a new location, their original filenames are used with the new location URI prefixed.
+
+Jena's API attempts to detect the language of the RDF data loaded from the original URI: the same language is used, with Turtle as a fall-back.
+It is worth noting that when a data model file containing comments is loaded, the comments are lost when the data model is stored.
 
 ### MOF2RDF models
 

@@ -56,7 +56,6 @@ public class MOF2RDFModelOWLReasonerTest {
 		loadModelDefaults();
 		RDFResource element = model.getElementById(URI_WHITEBOX);
 		Object motherBoard = element.getProperty("eg:motherBoard", context);
-		System.out.println(motherBoard.getClass());
 		assertTrue("motherBoard has max cardinality of 1 should only have that value returned ",
 			motherBoard instanceof MOF2RDFResource);
 	}

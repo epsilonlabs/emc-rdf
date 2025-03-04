@@ -12,6 +12,9 @@
  ********************************************************************************/
 package org.eclipse.epsilon.emc.rdf;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,7 +23,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.InfModel;
@@ -34,6 +40,8 @@ import org.apache.jena.reasoner.Reasoner;
 import org.apache.jena.reasoner.ReasonerRegistry;
 import org.apache.jena.reasoner.ValidityReport;
 import org.apache.jena.reasoner.ValidityReport.Report;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.eol.exceptions.EolRuntimeException;
@@ -86,9 +94,14 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 		this.reasonerType = rdfsReasonerType;
 	}
 
+	
 	protected final List<String> schemaURIs = new ArrayList<>();
+	protected Dataset schemaModelSet = DatasetFactory.create();		// DefaultModel empty, using NamedModels
+	
 	protected final List<String> dataURIs = new ArrayList<>();
-	protected OntModel model;
+	protected Dataset dataModelSet = DatasetFactory.create();		// DefaultModel empty, using NamedModels
+	
+	protected OntModel model;	// read-only
 
 	public RDFModel() {
 		this.propertyGetter = new RDFPropertyGetter(this);
@@ -234,15 +247,57 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 			}
 		}
 	}
+		
+	private void storeDataNamedModel (String namedModelURI, String saveLocationURI) throws IOException {
+		// NamedModelURI is a model in the dataset and locationURI be saved to
+	
+		if (dataModelSet.containsNamedModel(namedModelURI))
+		{
+			Model modelToSave = dataModelSet.getNamedModel(namedModelURI);
 
+			Lang lang = RDFDataMgr.determineLang(namedModelURI, namedModelURI, Lang.TTL);  // Hint becomes default
+
+			try (OutputStream out = new FileOutputStream(saveLocationURI)) {
+				RDFDataMgr.write(out, modelToSave, lang);
+				out.close();
+			}
+		}
+	}
+	
+	private boolean store(Function <String, String> mapper) {		
+		for (String uri : dataURIs) {
+			try {
+				storeDataNamedModel(uri, mapper.apply(uri));
+			} catch (IOException e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	@Override
 	public boolean store(String location) {
-		throw new UnsupportedOperationException();
+		/*
+		 * Save models to new URIs using the location given and namedModel filename
+		 * iterate over URIs, write the dataset named models back to new storage URI
+		 * with format detected by Jena
+		 */
+		if (!location.endsWith("/"))
+		{
+			location = location.concat("/");
+		}			
+		String locationPrefix = location;
+		return store(uri -> locationPrefix + uri.substring(uri.lastIndexOf('/') + 1));
 	}
 
 	@Override
 	public boolean store() {
-		throw new UnsupportedOperationException();
+		/*
+		 * Save back to original URI iterate over URIs, write the dataset named models
+		 * back to storage with format detected by Jena
+		 */
+		return store(uri -> uri);
 	}
 
 	@Override
@@ -324,38 +379,29 @@ public class RDFModel extends CachedModel<RDFModelElement> {
 			if (dataURIs.isEmpty()) {
 				throw new IllegalStateException("No file path has been set");
 			}
-
-			// Read all the URIs into an integrated model
-			Model schemaModel = ModelFactory.createDefaultModel();
-			for (Iterator<String> itUri = schemaURIs.iterator(); itUri.hasNext(); ) {
-				schemaModel.read(itUri.next());
-			}
+			
+			schemaModelSet = DatasetFactory.createNamed(schemaURIs);
+			Model schemaUnionModel = schemaModelSet.getUnionModel(); // READ-ONLY
 
 			// If a schema model has been loaded assume need for a reasoner using Jena's default OWL
-			if (schemaModel.size() >= 0 && reasonerType == ReasonerType.NONE) {
+			if (schemaURIs.size() >= 0 && reasonerType == ReasonerType.NONE) {
 				this.setReasonerType(ReasonerType.OWL_FULL);
 			}
 
-			Model dataModel = ModelFactory.createDefaultModel();
-			for (Iterator<String> itUri = dataURIs.iterator(); itUri.hasNext(); ) {
-				dataModel.read(itUri.next());
-			}
+			dataModelSet = DatasetFactory.createNamed(dataURIs);
+			Model dataUnionModel = dataModelSet.getUnionModel(); // READ-ONLY
 
 			//Create an OntModel to handle the data model being loaded or inferred from data and schema
 			if (reasonerType == ReasonerType.NONE) {
 				// Only the OntModel bits are added to the dataModel being loaded.
-				this.model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, dataModel);
+				this.model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, dataUnionModel);
 			} else {
 				// OntModel bits are added and the reasoner will add schema bits to the dataModel being loaded.
 				Reasoner reasoner = ReasonerRegistry.getOWLReasoner();
-				InfModel infmodel = ModelFactory.createInfModel(reasoner, schemaModel, dataModel);
+				InfModel infmodel = ModelFactory.createInfModel(reasoner, schemaUnionModel, dataUnionModel);
 				this.model = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, infmodel);
 			}
 
-			// Copy the Name prefix maps from the loaded Model dataModel to the new OntModel dataModel representation
-			for (Entry<String, String> e : dataModel.getNsPrefixMap().entrySet()) {
-				this.model.setNsPrefix(e.getKey(), e.getValue());
-			}
 		} catch (Exception ex) {
 			throw new EolModelLoadingException(ex, this);
 		}
