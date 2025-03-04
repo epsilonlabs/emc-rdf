@@ -2,7 +2,7 @@
 <launchConfiguration type="org.epsilon.eol.eclipse.dt.launching.EolLaunchConfigurationDelegate">
     <stringAttribute key="implementation_name" value="Parallel"/>
     <listAttribute key="models">
-        <listEntry value="uris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.turtles/foaf.rdf,platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.turtles/spiderman.ttl&#10;languagePreference=&#10;prefixes=&#10;aliases=&#10;name=Model&#10;schemaUris=&#10;type=RDF&#10;enableModelValidation=none"/>
+        <listEntry value="aliases=&#10;enableModelValidation=Jena clean&#10;languagePreference=&#10;name=Model&#10;prefixes=&#10;schemaUris=&#10;type=RDF&#10;uris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.turtles/foaf.rdf,platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.turtles/spiderman.ttl"/>
     </listAttribute>
     <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
     <intAttribute key="parallelism" value="7"/>

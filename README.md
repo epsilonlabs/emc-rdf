@@ -184,3 +184,10 @@ If there are multiple maximum cardinality restrictions, the most restrictive one
 
   In the specific case that the maximum cardinality is 1, `resource.property` will directly return the value (if set) or `null`, instead of returning a collection.
 
+### Model validation
+
+There is an option to enable model validation on an inferred model before it is used. The options for validation are:
+
+- None
+- Jena Valid: validation passes if the model has no internal inconsistencies, even though there may be some warnings.
+- Jena Clean: validation passes if the model has no internal inconsistencies *and* there are no warnings.
