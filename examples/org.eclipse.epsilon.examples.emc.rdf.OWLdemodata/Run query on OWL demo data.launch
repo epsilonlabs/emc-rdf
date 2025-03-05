@@ -3,8 +3,8 @@
     <booleanAttribute key="fine_grained_profiling" value="false"/>
     <stringAttribute key="implementation_name" value="Parallel"/>
     <listAttribute key="models">
-        <listEntry value="aliases=&#10;languagePreference=&#10;name=RDFModel&#10;prefixes=&#10;schemaUris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.OWLdata/owlDemoSchema.ttl&#10;type=RDF&#10;uris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.OWLdata/owlDemoData.ttl"/>
-        <listEntry value="aliases=&#10;languagePreference=&#10;name=MOF2RDFModel&#10;prefixes=&#10;schemaUris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.OWLdata/owlDemoSchema.ttl&#10;type=MOF2RDF&#10;uris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.OWLdata/owlDemoData.ttl"/>
+        <listEntry value="aliases=&#10;enableModelValidation=none&#10;languagePreference=&#10;name=RDFModel&#10;prefixes=&#10;schemaUris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.OWLdata/owlDemoSchema.ttl&#10;type=RDF&#10;uris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.OWLdata/owlDemoData.ttl"/>
+        <listEntry value="aliases=&#10;enableModelValidation=none&#10;languagePreference=&#10;name=MOF2RDFModel&#10;prefixes=&#10;schemaUris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.OWLdata/owlDemoSchema.ttl&#10;type=MOF2RDF&#10;uris=platform\:/resource/org.eclipse.epsilon.examples.emc.rdf.OWLdata/owlDemoData.ttl"/>
     </listAttribute>
     <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
     <intAttribute key="parallelism" value="7"/>
