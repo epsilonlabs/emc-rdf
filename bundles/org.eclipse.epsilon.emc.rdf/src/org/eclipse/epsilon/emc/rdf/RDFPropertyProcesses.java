@@ -25,6 +25,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.impl.PropertyImpl;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.eclipse.epsilon.eol.execute.context.IEolContext;
 public class RDFPropertyProcesses {
 
 	private RDFPropertyProcesses() {
@@ -58,36 +59,64 @@ public class RDFPropertyProcesses {
 		return propertyStatements;
 	}
 
-	public static MaxCardinalityRestriction getPropertyStatementMaxCardinalityRestriction(RDFQualifiedName propertyName, Resource resource) {
+	public static MaxCardinalityRestriction getPropertyStatementMaxCardinalityRestriction(RDFQualifiedName propertyName, Resource resource, IEolContext context) {
 		// Gets all the propertyStatements and finds all the MaxCardinality restrictions, keeps the most restrictive (lowest maxCardinality)
 		MaxCardinalityRestriction mostRestrictiveMaxCardinality = null;
-
+		OntProperty mostRestrictiveMaxCardinalityProperty = null;
+		
 		OntResource ontResource = resource.as(OntResource.class);
-
+		
 		// TODO re-evaluate if it is OK to use listRDFTypes(true) if we've triggered reasoning
-		for (ExtendedIterator<Resource> itRDFType = ontResource.listRDFTypes(false); itRDFType.hasNext(); ) {
+		for (ExtendedIterator<Resource> itRDFType = ontResource.listRDFTypes(false); itRDFType.hasNext();) {
 			Resource rdfType = itRDFType.next();
 			OntClass ontClass = rdfType.as(OntClass.class);
-			for (ExtendedIterator<OntProperty> itProp = ontClass.listDeclaredProperties(); itProp.hasNext(); ) {
+
+			for (ExtendedIterator<OntProperty> itProp = ontClass.listDeclaredProperties(); itProp.hasNext();) {
+
 				OntProperty prop = itProp.next();
-				if (propertyName.localName.equals(prop.getLocalName()) && Objects.equals(propertyName.namespaceURI, prop.getNameSpace())) {
-					for (ExtendedIterator<Restriction> itRestriction = prop.listReferringRestrictions(); itRestriction.hasNext(); ) {
-						Restriction restriction = itRestriction.next();
-						if (restriction.isMaxCardinalityRestriction()) {
-							MaxCardinalityRestriction maxCardinalityRestriction = restriction.asMaxCardinalityRestriction();
-							if (mostRestrictiveMaxCardinality == null) {
-								mostRestrictiveMaxCardinality = maxCardinalityRestriction;
-							} else {
-								if (mostRestrictiveMaxCardinality.getMaxCardinality() > maxCardinalityRestriction.getMaxCardinality()) {
+				if ((propertyName.localName.equals(prop.getLocalName()))
+						&& ((Objects.equals(propertyName.namespaceURI, prop.getNameSpace()))
+								|| (null == propertyName.prefix))) {
+
+					if (null != mostRestrictiveMaxCardinalityProperty) {
+						if (mostRestrictiveMaxCardinalityProperty.equals(prop)) {
+							// same property, don't need to look at it again
+						} else {
+							// You've run into ambiguity around the name of the property - raise a warning
+							context.getWarningStream().println(String.format(
+									"Ambiguous access to property with no prefix '%s':"
+									+"\n Most restrictive Max Cardinality found was %s %s,"
+									+" but also found this a similar property %s",
+									propertyName, mostRestrictiveMaxCardinalityProperty,
+									mostRestrictiveMaxCardinality.getMaxCardinality(), prop));
+						}
+					} else {
+
+						for (ExtendedIterator<Restriction> itRestriction = prop
+								.listReferringRestrictions(); itRestriction.hasNext();) {
+							
+							Restriction restriction = itRestriction.next();
+							if (restriction.isMaxCardinalityRestriction()) {
+								
+								MaxCardinalityRestriction maxCardinalityRestriction = restriction.asMaxCardinalityRestriction();
+								if (mostRestrictiveMaxCardinality == null) {
 									mostRestrictiveMaxCardinality = maxCardinalityRestriction;
+									mostRestrictiveMaxCardinalityProperty = prop;
+								} else {
+									if (mostRestrictiveMaxCardinality.getMaxCardinality() > maxCardinalityRestriction.getMaxCardinality()) {
+										mostRestrictiveMaxCardinality = maxCardinalityRestriction;
+										mostRestrictiveMaxCardinalityProperty = prop;
+									}
 								}
 							}
 						}
+						
 					}
+					
 				}
+
 			}
 		}
-
 		return mostRestrictiveMaxCardinality;
 	}
 

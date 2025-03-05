@@ -29,29 +29,29 @@ public class MOF2RDFResource extends RDFResource {
 
 		Collection<Object> value = super.getCollectionOfProperyValues(property, context);
 
-		// Perform Cardinality checks
+		// Restriction checking on property 
 		final RDFQualifiedName pName = RDFQualifiedName.from(property, this.owningModel::getNamespaceURI);
-
-		// Disable this check to remove the maxCardinality limit on returned properties
-		// i.e. maxCardinality == null.
+		
+		// Perform Cardinality checks
 		MaxCardinalityRestriction maxCardinality = RDFPropertyProcesses
-				.getPropertyStatementMaxCardinalityRestriction(pName, resource);
+				.getPropertyStatementMaxCardinalityRestriction(pName, resource, context);
 
 		// Check collection of rawValues is less than the MaxCardinality and prune
 		if (null != maxCardinality) {
 			if (value.size() > maxCardinality.getMaxCardinality()) {
-				System.err.println("Property [" + pName + "] has a max cardinality "
+				//TODO move this warning to context.getWarningStream()
+				context.getWarningStream().println("Property [" + pName + "] has a max cardinality "
 						+ maxCardinality.getMaxCardinality() + ", raw property values list contained " + value.size()
 						+ ".\n The list of raw property values has been pruned, it contained: " + value);
 
 				value = value.stream().limit(maxCardinality.getMaxCardinality()).collect(Collectors.toList());
 			}
 			if (maxCardinality.getMaxCardinality() == 1) {
-				// If the maximum cardinality is 1, return the single value (do not return a
-				// collection)
+				// If the maximum cardinality is 1, return the single value (not a collection)
 				return value.isEmpty() ? null : value.iterator().next();
 			}
 		}
+	
 		return value;
 
 	}

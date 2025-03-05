@@ -16,6 +16,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -78,6 +80,8 @@ public class CommonQueryTest<T extends RDFModel> {
 
 		this.pGetter = model.getPropertyGetter();
 		this.context = new EolContext();
+		ByteArrayOutputStream errorBOS = new ByteArrayOutputStream();
+		context.setWarningStream(new PrintStream(errorBOS));
 	}
 
 	@After
