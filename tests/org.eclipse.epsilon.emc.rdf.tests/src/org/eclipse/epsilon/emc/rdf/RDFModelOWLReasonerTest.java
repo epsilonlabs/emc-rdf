@@ -103,7 +103,7 @@ public class RDFModelOWLReasonerTest {
 		props.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE, languagePreference);
 
 		// There is a known issue in the model required for tests
-		props.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.VALIDATION_SELECTION_NONE);
+		props.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.ValidationMode.NONE);
 		model.load(props);
 
 		this.context = new EolContext();
