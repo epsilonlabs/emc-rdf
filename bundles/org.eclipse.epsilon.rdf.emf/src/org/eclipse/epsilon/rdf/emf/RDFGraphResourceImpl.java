@@ -16,10 +16,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.InfModel;
@@ -39,6 +43,9 @@ public class RDFGraphResourceImpl extends ResourceImpl {
 
 	private RDFResourceConfiguration config;
 	private RDFDeserializer deserializer;
+
+	private Dataset dataModelSet;
+	private Dataset schemaModelSet;
 
 	private Model rdfSchemaModel;
 	private Model rdfDataModel;
@@ -73,19 +80,22 @@ public class RDFGraphResourceImpl extends ResourceImpl {
 	}
 
 	protected void loadRDFModels() throws IOException {
-		this.rdfSchemaModel = ModelFactory.createDefaultModel();
-		loadRDFModels(config.getSchemaModels(), rdfSchemaModel);
+		this.schemaModelSet = loadRDFModels(config.getSchemaModels());
+		this.rdfSchemaModel = schemaModelSet.getUnionModel();
 
-		this.rdfDataModel = ModelFactory.createDefaultModel();
-		loadRDFModels(config.getDataModels(), rdfDataModel);
-
+		this.dataModelSet = loadRDFModels(config.getDataModels());
+		this.rdfDataModel = dataModelSet.getUnionModel();
+				
 		InfModel infModel = ModelFactory.createRDFSModel(rdfSchemaModel, rdfDataModel);
 		this.rdfOntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, infModel);
 
 		// TODO reintroduce internal consistency validation
 	}
 
-	public void loadRDFModels(Set<String> uris, Model targetModel) throws IOException, MalformedURLException {
+	public Dataset loadRDFModels(Set<String> uris) throws IOException, MalformedURLException {
+		Dataset newDataset = null;
+		List<String> namedModelSources = new ArrayList<String>();
+
 		for (String sURI : uris) {
 			URI uri = URI.createURI(sURI);
 			if (uri.isRelative()) {
@@ -100,11 +110,19 @@ public class RDFGraphResourceImpl extends ResourceImpl {
 			 */
 			if ("platform".equals(uri.scheme())) {
 				String sFileURI = FileLocator.toFileURL(new URL(uri.toString())).toString();
-				targetModel.read(sFileURI);
+				namedModelSources.add(sFileURI);
 			} else {
-				targetModel.read(uri.toString());
+				namedModelSources.add(uri.toString());
 			}
 		}
+		
+		// create a dataset with all the named models
+		if (!namedModelSources.isEmpty()) {
+			newDataset = DatasetFactory.createNamed(namedModelSources);
+		} else {
+			newDataset = DatasetFactory.create(); // create an empty one
+		}
+		return newDataset;
 	}
 
 	public RDFResourceConfiguration getConfig() {
