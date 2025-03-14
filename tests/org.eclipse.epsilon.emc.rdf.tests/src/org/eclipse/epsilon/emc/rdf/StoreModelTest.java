@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
+import org.eclipse.epsilon.rdf.validation.RDFValidation.ValidationMode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -221,7 +222,7 @@ public class StoreModelTest {
 				+ "," + OWL_DEMO_DATAMODEL_INVALID);			
 		propsOriginalModel.put(RDFModel.PROPERTY_SCHEMA_URIS, OWL_DEMO_SCHEMAMODEL);
 		propsOriginalModel.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE, LANGUAGE_PREFERENCE_EN_STRING);
-		propsOriginalModel.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.ValidationMode.NONE.getId());
+		propsOriginalModel.put(RDFModel.PROPERTY_VALIDATE_MODEL, ValidationMode.NONE.getId());
 		originalModel.load(propsOriginalModel);
 	}
 	
@@ -233,7 +234,7 @@ public class StoreModelTest {
 				+ "," + scratchDatamodelInvalidFile);			
 		scratchCopyProperties.put(RDFModel.PROPERTY_SCHEMA_URIS, OWL_DEMO_SCHEMAMODEL);
 		scratchCopyProperties.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE, LANGUAGE_PREFERENCE_EN_STRING);
-		scratchCopyProperties.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.ValidationMode.NONE.getId());
+		scratchCopyProperties.put(RDFModel.PROPERTY_VALIDATE_MODEL, ValidationMode.NONE.getId());
 		
 		return scratchCopyProperties;
 	}

@@ -9,3 +9,4 @@ Require-Bundle: org.junit;bundle-version="4.0.0",
 Bundle-Vendor: University of York
 Automatic-Module-Name: org.eclipse.epsilon.emc.rdf.tests
 Bundle-RequiredExecutionEnvironment: JavaSE-17
+Import-Package: org.eclipse.epsilon.rdf.validation

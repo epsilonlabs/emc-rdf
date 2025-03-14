@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
 import org.eclipse.epsilon.eol.execute.context.EolContext;
+import org.eclipse.epsilon.rdf.validation.RDFValidation.ValidationMode;
 import org.junit.After;
 import org.junit.Test;
 
@@ -103,7 +104,7 @@ public class RDFModelOWLReasonerTest {
 		props.put(RDFModel.PROPERTY_LANGUAGE_PREFERENCE, languagePreference);
 
 		// There is a known issue in the model required for tests
-		props.put(RDFModel.PROPERTY_VALIDATE_MODEL, RDFModel.ValidationMode.NONE.getId());
+		props.put(RDFModel.PROPERTY_VALIDATE_MODEL, ValidationMode.NONE.getId());
 		model.load(props);
 
 		this.context = new EolContext();

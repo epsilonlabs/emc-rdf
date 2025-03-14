@@ -26,7 +26,7 @@ import org.eclipse.epsilon.common.dt.launching.dialogs.AbstractModelConfiguratio
 import org.eclipse.epsilon.common.dt.launching.dialogs.BrowseWorkspaceUtil;
 import org.eclipse.epsilon.common.dt.util.DialogUtil;
 import org.eclipse.epsilon.emc.rdf.RDFModel;
-import org.eclipse.epsilon.emc.rdf.RDFModel.ValidationMode;
+import org.eclipse.epsilon.rdf.validation.RDFValidation.ValidationMode;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -525,7 +525,7 @@ public class RDFModelConfigurationDialog extends AbstractModelConfigurationDialo
 		validationModeLabel.setText("Mode:");
 
 		validateModelCombo = new Combo(groupContent,SWT.READ_ONLY);
-		for (ValidationMode mode : RDFModel.ValidationMode.values()) {
+		for (ValidationMode mode : ValidationMode.values()) {
 			validateModelCombo.add(mode.getId());
 		}
 		if(validateModelCombo.getText().isBlank()) {

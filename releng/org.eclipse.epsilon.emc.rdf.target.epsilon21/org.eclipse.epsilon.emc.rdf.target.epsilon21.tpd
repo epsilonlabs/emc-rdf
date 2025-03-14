@@ -26,6 +26,7 @@ location "https://download.eclipse.org/releases/2023-12" {
 	org.eclipse.xtext.runtime.feature.group lazy
 	org.eclipse.m2m.qvt.oml.sdk.feature.group lazy
 	org.eclipse.emf.cdo.sdk.feature.group lazy
+	org.yaml.snakeyaml lazy
 }
 
 location "https://download.eclipse.org/emfatic/update" {
@@ -72,7 +73,6 @@ location "https://download.eclipse.org/tools/orbit/downloads/drops/R202112131738
 	org.mockito [2.23.0,2.23.1)
 	org.objenesis [2.6.0,2.6.1)
 	org.slf4j.api [1.7.2,1.7.3)
-	org.yaml.snakeyaml [1.27.0,1.27.1)
 }
 
 location "https://download.eclipse.org/acceleo/updates/releases/3.7/" {

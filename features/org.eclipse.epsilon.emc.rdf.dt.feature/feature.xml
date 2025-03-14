@@ -284,4 +284,8 @@ No third-party beneficiary rights are created under this Agreement.
          id="org.eclipse.epsilon.emc.rdf.dt"
          version="0.0.0"/>
 
+   <plugin
+         id="org.eclipse.epsilon.rdf.validation"
+         version="0.0.0"/>
+
 </feature>

@@ -11,7 +11,6 @@
  *   Antonio Garcia-Dominguez - initial API and implementation
  ********************************************************************************/
 package org.eclipse.epsilon.emc.rdf;
-import static org.eclipse.epsilon.emc.rdf.RDFModel.ValidationMode;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -21,6 +20,7 @@ import java.io.PrintStream;
 
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.eol.exceptions.models.EolModelLoadingException;
+import org.eclipse.epsilon.rdf.validation.RDFValidation.ValidationMode;
 import org.junit.Test;
 
 public class RDFModelValidationTest {
@@ -123,7 +123,7 @@ public class RDFModelValidationTest {
 	
 	// Functions not tests
 
-	protected void loadModelDataAndSchema(String dataModelUri, RDFModel.ValidationMode mode) throws EolModelLoadingException {
+	protected void loadModelDataAndSchema(String dataModelUri, ValidationMode mode) throws EolModelLoadingException {
 		this.model = new RDFModel();
 		StringProperties props = new StringProperties();
 		props.put(RDFModel.PROPERTY_DATA_URIS, dataModelUri);
@@ -133,7 +133,7 @@ public class RDFModelValidationTest {
 		model.load(props);
 	}
 	
-	protected void loadModelDataOnly(String dataModelUri, RDFModel.ValidationMode mode) throws EolModelLoadingException {
+	protected void loadModelDataOnly(String dataModelUri, ValidationMode mode) throws EolModelLoadingException {
 		this.model = new RDFModel();
 		StringProperties props = new StringProperties();
 		props.put(RDFModel.PROPERTY_DATA_URIS, dataModelUri);
