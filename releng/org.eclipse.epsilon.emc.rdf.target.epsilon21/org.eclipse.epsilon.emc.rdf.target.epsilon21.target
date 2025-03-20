@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="EMC RDF Target Platform with Epsilon 2.1" sequenceNumber="1739634829">
+<target name="EMC RDF Target Platform with Epsilon 2.1" sequenceNumber="1741977147">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
       <unit id="org.eclipse.license.feature.group" version="0.0.0"/>
@@ -29,6 +29,7 @@
       <unit id="org.eclipse.xtext.runtime.feature.group" version="0.0.0"/>
       <unit id="org.eclipse.m2m.qvt.oml.sdk.feature.group" version="0.0.0"/>
       <unit id="org.eclipse.emf.cdo.sdk.feature.group" version="0.0.0"/>
+      <unit id="org.yaml.snakeyaml" version="0.0.0"/>
       <repository location="https://download.eclipse.org/releases/2023-12"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">
@@ -75,7 +76,6 @@
       <unit id="org.mockito" version="2.23.0.v20200310-1642"/>
       <unit id="org.objenesis" version="2.6.0.v20180420-1519"/>
       <unit id="org.slf4j.api" version="1.7.2.v20121108-1250"/>
-      <unit id="org.yaml.snakeyaml" version="1.27.0.v20201111-1638"/>
       <repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20211213173813/repository"/>
     </location>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="true" type="InstallableUnit">

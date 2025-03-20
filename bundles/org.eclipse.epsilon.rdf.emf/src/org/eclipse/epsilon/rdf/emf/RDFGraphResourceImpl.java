@@ -35,6 +35,9 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.epsilon.rdf.emf.config.RDFResourceConfiguration;
+import org.eclipse.epsilon.rdf.validation.RDFValidation.ValidationMode;
+import org.eclipse.epsilon.rdf.validation.RDFValidation.ValidationMode.RDFModelValidationReport;
+import org.eclipse.epsilon.rdf.validation.RDFValidationException;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.CustomClassLoaderConstructor;
@@ -50,6 +53,17 @@ public class RDFGraphResourceImpl extends ResourceImpl {
 	private Model rdfSchemaModel;
 	private Model rdfDataModel;
 	private OntModel rdfOntModel;
+	
+	public static final ValidationMode VALIDATION_SELECTION_DEFAULT = ValidationMode.NONE;
+	protected ValidationMode validationMode = VALIDATION_SELECTION_DEFAULT;
+	
+	public ValidationMode getValidationMode() {
+		return validationMode;
+	}
+
+	public void setValidationMode(ValidationMode validationMode) {
+		this.validationMode = validationMode;
+	}
 
 	@Override
 	protected void doLoad(InputStream inputStream, Map<?, ?> options) throws IOException {
@@ -61,6 +75,8 @@ public class RDFGraphResourceImpl extends ResourceImpl {
 		CustomClassLoaderConstructor constructor = new CustomClassLoaderConstructor(this.getClass().getClassLoader(), new LoaderOptions());
 		this.config = new Yaml(constructor).loadAs(inputStream, RDFResourceConfiguration.class);
 		loadRDFModels();
+
+		validationMode = config.getRawValidationMode();
 
 		deserializer = new RDFDeserializer(() -> this.getResourceSet().getPackageRegistry());
 		deserializer.deserialize(rdfOntModel);
@@ -89,7 +105,10 @@ public class RDFGraphResourceImpl extends ResourceImpl {
 		InfModel infModel = ModelFactory.createRDFSModel(rdfSchemaModel, rdfDataModel);
 		this.rdfOntModel = ModelFactory.createOntologyModel(OntModelSpec.OWL_DL_MEM_RULE_INF, infModel);
 
-		// TODO reintroduce internal consistency validation
+		RDFModelValidationReport result = validationMode.validate(rdfOntModel);
+		if (!result.isValid()) {
+			throw new RDFValidationException(result.getText());
+		}
 	}
 
 	public Dataset loadRDFModels(Set<String> uris) throws IOException, MalformedURLException {
