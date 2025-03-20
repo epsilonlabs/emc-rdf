@@ -54,6 +54,9 @@ import com.google.common.collect.Multimap;
  */
 public class RDFDeserializer {
 
+	List<String> trace = new ArrayList<String>();
+	List<String> traceAttributes = new ArrayList<String>();
+	
 	private final Supplier<Registry> packageRegistry;
 
 	private final Map<EObject, Resource> eobToResource = new IdentityHashMap<>();
@@ -75,6 +78,11 @@ public class RDFDeserializer {
 				deserializeObjectAttributes(res);
 			}
 		}
+		
+		if(!traceAttributes.isEmpty()) {
+			System.out.println("\n [TRACE] deserialize OntModel Attributes: " + ontologyModel.hashCode());
+			traceAttributes.forEach(e->System.out.println(e));
+			}
 
 		// Phase 2: set up cross-references
 		for (Entry<Resource, EObject> entry : resourceToEob.entries()) {
@@ -105,6 +113,11 @@ public class RDFDeserializer {
 			}
 
 			deserializeProperty(node, eob, sf);
+			trace.add("[EAttribute] " + sf.getName() + " = " + eob.eGet(sf)
+			+ "\n -node- " + node
+			+ "\n -eobject- " + eob
+			+ "\n -eattribute- " + sf
+			);
 		}
 
 		return eob;
@@ -246,22 +259,32 @@ public class RDFDeserializer {
 								continue;
 							}
 						}
+						trace.add(String.format("[RDFNode] typeName = %s \n -typeobject- %s", typeName , typeObject));
+						trace.add(String.format("[New EClass] name = %s \n -eclass- %s ", newEClass.getName(),  newEClass));			
 						eClasses.add(newEClass);
 					}
 				}
 			}
 		}
-
+		if (!eClasses.isEmpty()) {
+			trace.add(String.format("[EClasses] %s", eClasses)); }
 		return eClasses;
 	}
 
 	protected void deserializeObjectAttributes(Resource node) {
+		trace = new ArrayList<String>();		
+		trace.add(String.format("\n[Trace] deserializeObjectAttributes Resource node: %s", node));
 		Set<EClass> eClasses = findMostSpecificEClasses(node);
 		for (EClass eClass: eClasses) {
 			EObject eob = deserializeObjectAttributes(node, eClass);
 			eobToResource.put(eob, node);
 			resourceToEob.put(node, eob);
 		}
+		
+		if (trace.size() > 1) {
+			traceAttributes.addAll(trace);
+		}
+
 	}
 
 }
