@@ -43,8 +43,8 @@ operation afterChange () {
 
 operation reportTask (t : Task) {
 	// Print the title and the total person-months of the task
-	t.id.println("   * Task - id: ");
 	t.title.println("   * Task - title: ");
+	t.id.println("   * Task - id: ");
 	t.start.println("   * Task - start: ");
 	t.duration.println("   * Task - dur:");
 	showTaskEffort(t);
@@ -58,9 +58,8 @@ operation showTaskEffort(t : Task) {
 }
 
 operation showEffort(e : Effort) {
-	e.id.println("  * Effort (id):  ");
-	e.person.id.println("    - person (id):  ");
-	e.person.name.println("    - name:  ");
-	e.percentage.println( "    - percentage % ");
+	e.id.print("    - Effort (id):  ");
+	e.person.name.print(" - name:  ");
+	e.percentage.println( " - percentage % ");
 	return;
 }

@@ -11,13 +11,16 @@ for (p in Project.all) {
 	var implementationEfforts = implementationTask.effort;
 	
 	var moveEffort = analysisTask.effort.first();
+	showEffort(moveEffort).println("Removed from Analysis Task");
+	
 	analysisEfforts.remove(moveEffort);
 	implementationEfforts.add(moveEffort);
 	
-	//"\n--removed--\n".println();
-	//reportTask(analysisTask);
-	//"\n--Added--\n".println();
-	//reportTask(implementationTask);
+	
+	"\n--removed--\n".println();
+	reportTask(analysisTask);
+	"\n--Added--\n".println();
+	reportTask(implementationTask);
 		
 	"\n-End-\n".println();
 }

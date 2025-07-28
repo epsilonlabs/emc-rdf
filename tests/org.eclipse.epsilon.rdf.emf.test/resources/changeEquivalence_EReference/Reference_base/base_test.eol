@@ -6,15 +6,7 @@ for (p in Project.all) {
 	(p.title.print(" * Project - Title ") + p.print( " - ")).println();
 	for (t in p.tasks) {
 	// Print the title and the total person-months of the task
-	t.id.println("   * Task - id: ");
-	t.title.println("   * Task - title: ");
-	t.start.println("   * Task - start: ");
-	t.duration.println("   * Task - dur:");
-	for (e in t.effort) {
-		e.id.println("    * Effort (id):  ");
-		e.person.id.println("    * Effort - person (id):  ");
-		e.percentage.println( "    * Effort - percentage % ");
-		}	
+	reportTask(t);
 	}
 }
 
@@ -22,10 +14,6 @@ for (p in Project.all) {
 for (t in Task.all) {
 	// Print the title and the total person-months of the task
 	(t.title + ": " + t.getTotalEffort()).println();
-	for (e in t.effort) {
-		e.person.name.print(" - ");
-		e.person.println(" -- ");
-	}
 }
 
 // Count the tasks that are undertaken by a single person
@@ -37,3 +25,4 @@ operation Task getTotalEffort() {
 	return self.effort.
 		collect(e|self.duration*e.percentage/100.0).sum();
 }
+
