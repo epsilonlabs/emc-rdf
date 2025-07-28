@@ -174,6 +174,10 @@ public class RDFGraphResourceImpl extends ResourceImpl {
 	public Collection<EObject> getEObjects(Resource res) {
 		return deserializer.getEObjects(res);
 	}
+	
+	public Map<EObject, Resource> getEObjectToRDFResourceMap() {
+		return deserializer.getEObjectToResourceMap();
+	}
 
 	protected void loadRDFModels() throws IOException {
 		this.schemaModelSet = loadRDFModels(config.getSchemaModels());
