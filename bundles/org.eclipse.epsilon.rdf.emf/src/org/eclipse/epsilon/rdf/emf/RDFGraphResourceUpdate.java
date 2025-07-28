@@ -40,6 +40,7 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.epsilon.rdf.emf.RDFGraphResourceImpl.MultiValueAttributeMode;
 
 public class RDFGraphResourceUpdate {
@@ -506,6 +507,46 @@ public class RDFGraphResourceUpdate {
 	}
 	
 	//
+	// EObject instance handling
+	
+	private void checkAndLogOrphanedEObjects(Model model, Object oldValue) {
+		// oldValues that are EObject instances, can become orphans when the last EReference is removed
+		// However, these orphans could be added back on to the model if a new EReference is added.
+		// Best method so far to check for Orphan EObjects is to check eContainer is not null
+		// There needs to be an inverse of this method which removes orphans from the log on Add
+		if (oldValue instanceof EObject) {
+			EObject oldValueEObject = (EObject) oldValue;					
+			Resource oldValueResource = rdfGraphResource.getRDFResource(oldValueEObject);
+			
+			if(EcoreUtil.getURI(oldValueEObject).toString().equals("#//")) {
+				System.out.println(" [EObject to delete] - " + oldValueEObject);
+			}
+			
+			removeEObjectStatements(model, oldValueEObject, oldValueResource);
+		}
+	}
+
+	private void removeEObjectStatements(Model model, EObject oldValueEObject, Resource oldValueResource) {
+		if(null == oldValueEObject.eContainer() ) {
+			System.out.println(" [EObject to delete] - " + oldValueEObject.eContainer());
+			
+			// Delete all the statements from RDF where the old Value is Subject if it is not the Object of any other statements
+			// We have to go to each data model and remove statements
+			// This process should be run only when the Orphaned EObjects have been removed from memory and can't come back!
+			List stmts = model.listStatements(null, null, oldValueResource).toList();
+			if(stmts.isEmpty()) {
+				//printModelToConsole(model, "BEFORE removing orphan EObject");
+				System.out.println("orphan EObject:\n - " + oldValueEObject.hashCode() 
+						+ "\n  - " + EcoreUtil.getIdentification(oldValueEObject)
+						+ "\n  - " + oldValueResource.getURI());
+				model.getResource(oldValueResource.getURI()).listProperties().forEach(s-> System.out.println(" -- " + s));
+				model.removeAll(oldValueResource, null, null);
+				//printModelToConsole(model, "AFTER removing orphan EObject");
+			}
+		}
+	}
+
+	//
 	// Single-value Features operations
 	
 	public void newSingleValueEStructuralFeatureStatements(List<Resource> namedModelURIs, EObject onEObject, EStructuralFeature eStructuralFeature, Object newValue) {
@@ -551,6 +592,8 @@ public class RDFGraphResourceUpdate {
 		Statement oldStatement = createStatement(onEObject, eStructuralFeature, oldValue, model);
 		if (model.contains(oldStatement)) {
 			model.remove(oldStatement);
+			// TODO handle removing the last reference to an EObject : remove orphan EObject
+			checkAndLogOrphanedEObjects(model, oldValue);
 			return;
 		}
 		
@@ -558,6 +601,8 @@ public class RDFGraphResourceUpdate {
 		Statement stmtToRemove = findEquivalentStatement(model, onEObject, eStructuralFeature, oldValue);
 		if (stmtToRemove != null) {
 			model.remove(stmtToRemove);
+			// TODO handle removing the last reference to an EObject : remove orphan EObject
+			checkAndLogOrphanedEObjects(model, oldValue);
 			return;
 		}
 		
@@ -569,6 +614,8 @@ public class RDFGraphResourceUpdate {
 						+ "\n Remove - default value %s - old value %s ",
 						eStructuralFeature.getDefaultValue(), oldValue));					
 			}
+			// TODO handle removing the last reference to an EObject : remove orphan EObject
+			checkAndLogOrphanedEObjects(model, oldValue);
 			return;
 		}
 
@@ -639,6 +686,9 @@ public class RDFGraphResourceUpdate {
 					// The first item is might look like a single value EAttribute
 					removeSingleValueEStructuralFeatureStatements(model, onEObject, eStructuralFeature, oldValue);
 				}
+				
+				// TODO handle removing the last reference to an EObject : remove orphan EObject
+				checkAndLogOrphanedEObjects(model, oldValue);
 				return;
 			}
 		}
