@@ -12,14 +12,18 @@
  ********************************************************************************/
 package org.eclipse.epsilon.rdf.emf;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.jena.rdf.model.Resource;
 import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EContentAdapter;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 
@@ -42,9 +46,30 @@ public class RDFGraphResourceNotificationAdapterTrace extends EContentAdapter {
 		} else {
 			// Notification is not for a feature
 			processTrace.append(String.format("\n - Not a Feature notification \n - %s ", notification));
+			processTrace.append(String.format("\n - %s Target class: %s", eventTypeToString(notification.getEventType()), this.target.getClass()));
+			
+			Object oldValue = notification.getOldValue();
+			Object newValue = notification.getNewValue();
+			
+			if(target instanceof EObject) {
+				EObject targetEObject = (EObject) target;
+				 EObject root = EcoreUtil.getRootContainer(targetEObject);
+				 processTrace.append(String.format("\n - %s Target is EObject: %s", 
+						 eventTypeToString(notification.getEventType()),
+						EcoreUtil.getRelativeURIFragmentPath(root, targetEObject)));
+				 processTrace.append(String.format("\n  - old value: %s", oldValue ));
+				 if(oldValue instanceof ResourceSet) {
+					 ResourceSet oldResourceSet = (ResourceSet) oldValue;
+					 processTrace.append(String.format("\n oldResourceSet: ", oldResourceSet.getPackageRegistry()));					 
+				 }
+				 
+				 processTrace.append(String.format("\n  - new value: %s", newValue));
+			}
+			
+			
 		}
 
-		System.out.println(processTrace + "\n\n");
+		System.err.println(processTrace + "\n\n");
 	}
 
 	private void featureNotification (Object feature, Notification notification){		
@@ -62,6 +87,7 @@ public class RDFGraphResourceNotificationAdapterTrace extends EContentAdapter {
 
 		if (feature instanceof EObject) {
 			//eObjectNotification((EObject) feature, notification);
+			System.out.println("EObject notification");
 			return;
 		}
 		
@@ -73,11 +99,13 @@ public class RDFGraphResourceNotificationAdapterTrace extends EContentAdapter {
 		EObject onEObject = (EObject) notification.getNotifier(); 	// RDF node
 		EStructuralFeature changedFeature = eStructuralFeature; 	// RDF property
 		// eAttribute's is value 									// RDF object (node/literal)
-
-
-		
+	
 		Object oldValue = notification.getOldValue();
 		Object newValue = notification.getNewValue();
+		
+		RDFGraphResourceImpl graphResource = (RDFGraphResourceImpl) onEObject.eResource();
+		Map<EObject, Resource> mapEobToRDF = graphResource.getEObjectToRDFResourceMap();
+		ResourceSet mapRDFToEob = graphResource.getResourceSet();
 
 		if (changedFeature instanceof EAttribute) {
 			processTrace.append(String.format("\n EAttribute "));
@@ -138,6 +166,22 @@ public class RDFGraphResourceNotificationAdapterTrace extends EContentAdapter {
 			processTrace.append("REMOVE");
 			reportEObjectIdentity(onEObject);
 			reportEStructuralFeatureChange(changedFeature, oldValue, newValue);
+			
+			if(oldValue instanceof EObject) {
+				Resource oldValueRes = mapEobToRDF.get(oldValue);
+				Collection<EObject> oldEobs = graphResource.getEObjects(oldValueRes);
+				
+				if(null != oldValueRes) {
+					processTrace.append(String.format("\n onEObject RDF Resource: %s", mapEobToRDF.get(onEObject)));
+					processTrace.append(String.format("\n oldValue RDF Resource: %s", oldValueRes));
+					processTrace.append(String.format("\n oldValue EObjects in RDF map:"));
+					for (EObject eObject : oldEobs) {
+						processTrace.append(String.format("\n - %s",getEObjectLocation(eObject)));
+						
+					}
+				}
+			}
+			
 			break;
 		case Notification.REMOVE_MANY:
 			processTrace.append("REMOVE_MANY");			
@@ -229,7 +273,7 @@ public class RDFGraphResourceNotificationAdapterTrace extends EContentAdapter {
 	
 	// REPORTING code
 
-	private void reportEStructuralFeatureChange(EStructuralFeature eStructuralFeature, Object oldValue, Object newValue) {		
+ 	private void reportEStructuralFeatureChange(EStructuralFeature eStructuralFeature, Object oldValue, Object newValue) {		
 		String multi = "";
 		if(eStructuralFeature.isMany()) {
 			multi = "many";
