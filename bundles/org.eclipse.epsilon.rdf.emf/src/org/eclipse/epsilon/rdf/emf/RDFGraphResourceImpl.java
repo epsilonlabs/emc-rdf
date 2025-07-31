@@ -116,6 +116,7 @@ public class RDFGraphResourceImpl extends ResourceImpl {
 		deserializer = new RDFDeserializer(() -> this.getResourceSet().getPackageRegistry());
 		deserializer.deserialize(rdfOntModel);
 		for (EObject eob : deserializer.getEObjectToResourceMap().keySet()) {
+			// Anything without a container is placed on the model root.
 			if (eob.eContainer() == null) {
 				getContents().add(eob);
 			}
