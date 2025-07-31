@@ -304,5 +304,17 @@ public class RDFDeserializer {
 		String eobLocation= String.format("%s.%s.%s",EcoreUtil.getURI(eob),eob.eClass().getName(),eob.eClass().getClassifierID());
 		return eobLocation;
 	}
+	
+	public void removeEObject (EObject eob ) {
+		Resource res = getRDFResource(eob);
+		
+	}
+	
+
+	public void registerNewEObject(EObject eob, Resource node) {
+		// TODO Auto-generated method stub
+		eobToResource.put(eob, node);
+		resourceToEob.put(node, eob);
+	}
 
 }
