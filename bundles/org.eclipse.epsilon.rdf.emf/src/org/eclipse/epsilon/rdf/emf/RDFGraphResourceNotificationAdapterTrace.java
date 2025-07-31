@@ -18,7 +18,6 @@ import java.util.Map;
 
 import org.apache.jena.rdf.model.Resource;
 import org.eclipse.emf.common.notify.Notification;
-import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EAttribute;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
@@ -359,8 +358,7 @@ public class RDFGraphResourceNotificationAdapterTrace extends EContentAdapter {
 
 	private void reportEObjectIdentity(EObject eObject) {
 		processTrace.append(  String.format("\n - EObject : (#%s) %s - %s ",eObject.hashCode() , eObject.eClass().getName(),
-				//EcoreUtil.getIdentification(eObject)));
-				EcoreUtil.getURI(eObject)));
+				EcoreUtil.getIdentification(eObject)));
 	}
 	
 	@SuppressWarnings("unchecked")
