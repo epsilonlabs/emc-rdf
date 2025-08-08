@@ -60,17 +60,6 @@ public class RDFGraphResourceUpdate {
 		this.rdfGraphResource = rdfGraphResource;
 		this.preferListsForMultiValues = multiValueMode.equals(MultiValueAttributeMode.LIST);
 	}
-
-	//
-	// Model Elements
-	
-	public void addModelElement() {
-		
-	}
-	
-	public void removeModelElement() {
-		
-	}	
 	
 	//
 	// Generic Statement methods for EStructural Features
@@ -141,7 +130,6 @@ public class RDFGraphResourceUpdate {
 		return findEquivalentStatement(model, rdfGraphResource.getRDFResource(eob), eStructuralFeature, value);
 	}
 	
-	
 	private Statement findEquivalentStatement(Model model, Resource eobRes, EStructuralFeature eStructuralFeature, Object value) {		
 		// Returns a statement for a value from similar model statements (Subject-Property) and the deserialized value matches
 		List<Statement> matchedStatementList = new ArrayList<Statement>();
@@ -180,7 +168,6 @@ public class RDFGraphResourceUpdate {
 		return createStatement(subject, eStructuralFeature, value, model);
 	}
 	
-	
 	private Statement createStatement(Resource eObjectResource, EStructuralFeature eStructuralFeature, Object value, Model model) {
 		// A statement is formed as "subject–predicate–object"
 		// SUBJECT
@@ -192,54 +179,54 @@ public class RDFGraphResourceUpdate {
 		return ResourceFactory.createStatement(subject, property, object);		
 	}
 	
-	private String getNsPrefix (EObject eObject) {
-		String namespacePrefix = null; 
+	private String getEClassNsPrefix (EObject eObject) {
+		String namespaceIRI = null; 
 		// TODO Add switch case here for different methods for creating NsPrefix.
-		namespacePrefix = eObject.eClass().getEPackage().getNsURI(); // Name space based on EPackage prefix		
-		System.out.println("nameSpace URI prefix: " + namespacePrefix );
-		return namespacePrefix;
+		namespaceIRI = eObject.eClass().getEPackage().getNsURI(); // Name space based on EPackage prefix		
+		System.out.println("eClass namespace IRI prefix: " + namespaceIRI );
+		return namespaceIRI;
 	}
 
-	private String createEObjectURI(EObject eObject) {
-		String namespacePrefix = getNsPrefix(eObject);
+	private String createEObjectIRI(EObject eObject, String rdfNamespace) {
+		//String namespacePrefix = getEClassNsPrefix(eObject);
+		
 		// TODO Add switch case here for different URI generating methods.
 		String eObjectName = EcoreUtil.generateUUID();  // This UUID is generated using Date and Time (now).
 		
-		String rdfURI = String.format("%s#%s", namespacePrefix,eObjectName);
-		System.out.println("new eObject rdfURI: " + rdfURI);
-		return rdfURI;
+		String rdfIRI = String.format("%s#%s", rdfNamespace,eObjectName);
+		System.out.println("new eObject rdfURI: " + rdfIRI);
+		return rdfIRI;
 	}
 	
-	private Resource createEObjectRDFtypeResource(EObject eObject) {
-		String namespacePrefix = getNsPrefix(eObject);
+	private String createEObjectRDFtypeIRI(EObject eObject) {
+		String namespacePrefix = getEClassNsPrefix(eObject);
 		
 		String eObjectType = eObject.eClass().getName();
 		
-		String uri = String.format("%s#%s", namespacePrefix,eObjectType);
-		System.out.println("new eObject Type rdfURI: " + uri);
-		return ResourceFactory.createResource(uri);
+		String iri = String.format("%s#%s", namespacePrefix,eObjectType);
+		System.out.println("new eObject Type rdf IRI: " + iri);
+		return iri;
 	}
-	
-	
-	
 	
 	private Resource createNewEObjectRootRDFstatement(EObject eObject, Model model) {
 		
-		// Make a URI		
-		String uri = createEObjectURI(eObject);
+		// Make a URI for the EObject
+		String eObjectIRI = createEObjectIRI(eObject, "http://eclipse.org/epsilon/rdf/");
 		
-		// Create the root Resource for the eObject		
-		//Resource eObjectResource = ResourceFactory.createResource(uri);
-		Resource eObjectResource = model.createResource(uri);
+		// TODO check for existing URI in the deserializer
 		
-		// Make an RDF type statement for the eObject
-		//Statement typeStmt = ResourceFactory.createStatement(eObjectResource, RDF.type, createEObjectRDFtypeResource(eObject));
-		//model.add(typeStmt);
-		model.createStatement(eObjectResource, RDF.type, eObjectResource);
+		// Make a URI for the EObject's EClass
+		String eClassIRI = createEObjectRDFtypeIRI(eObject);
 		
-		
-		
-		return eObjectResource;
+		// Create the root statement for the eObject		
+		Resource subject = model.createResource(eObjectIRI);
+		Property predicate = RDF.type;
+		Resource object = model.createResource(eClassIRI);
+				
+		// Add the statement to the model
+		model.add(subject, predicate, object);
+
+		return subject;
 	}
 
 	private void createEStructuralFeatureStatements(EObject eObject, Model model, Resource eObjectResource) {
@@ -609,12 +596,48 @@ public class RDFGraphResourceUpdate {
 	//
 	// EObject instance handling
 	
-	private void checkForOrphanedEObject(Model model, Object oldValue) {
+
+
+	
+	private void checkForContainmentReference(Model model, EStructuralFeature eStructuralFeature, Object oldValue) {
+		
+		return;		
+		/*
+		// Need to disable this bit of code, to prevent removal of EObject statements 
+		// Removing EObjects doesn't fully work in this version
+		 * 
+		if (eStructuralFeature instanceof EReference) {
+			EReference eReference = (EReference) eStructuralFeature;
+			if (eReference.isContainment()) {
+				if (oldValue instanceof EObject) {
+					EObject eObject = (EObject) oldValue;
+
+					if (null != eObject.eContainer()) {
+						return;
+					}
+					System.out.println(" --- eContainer is null ");
+
+					checkForOrphanEObjects(model, oldValue);
+					
+				}
+
+			}
+		}
+		*/
+
+		// EObject sub = (EObject) oldValueEObject.eGet(eRef);
+		// org.eclipse.emf.ecore.resource.Resource subRes = sub.eResource();
+		// if(subRes.equals(rdfGraphResource)) {
+		// System.out.print("This is at the EMF model root : " +
+		// EcoreUtil.getIdentification(sub));
+		// }
+		
 		// oldValues that are EObject instances, can become orphans when the last EReference is removed.
 		// However, these orphans could be added back on to the model if a new EReference is added. (if not cleared from memory)
 		// Best method so far to check for Orphan EObjects is to check eContainer is not null.
 		// If logging removed items, there needs to be an inverse of this method which removes orphans from the log on when references are added
 		
+		/*
 		if (oldValue instanceof EObject) {
 			EObject oldValueEObject = (EObject) oldValue;					
 			Resource oldValueResource = rdfGraphResource.getRDFResource(oldValueEObject);
@@ -622,6 +645,7 @@ public class RDFGraphResourceUpdate {
 			if(EcoreUtil.getURI(oldValueEObject).toString().equals("#//")) {
 				System.out.println(" [EObject to delete] - " + oldValueEObject);
 			}
+
 			
 			if(null == oldValueEObject.eContainer() ) {			
 				removeEObjectStatements(model, oldValueEObject, oldValueResource);			
@@ -630,16 +654,60 @@ public class RDFGraphResourceUpdate {
 			// Now we need to update the Deserializer maps
 			// Reload the RDF models or remove the entries
 		}
+		*/
+		
+	}
+	
+	private void checkForOrphanEObjects(Model model, Object object) {
+		if (object instanceof EObject) {
+			EObject eObject = (EObject) object;
+			Resource oldValueResource = rdfGraphResource.getRDFResource(eObject);
+
+			if (null != eObject.eResource()) {
+				return;
+			}
+			System.out.println(" --- eResource is null ");
+			
+			recursiveContainmentCheck(model, eObject);
+			
+			removeEObjectStatements(model, eObject, oldValueResource);
+		}
+	}
+	
+	private void recursiveContainmentCheck (Model model, EObject eObject) {
+		// Check recursively for contained EObjects.
+		EList<EReference> containments = eObject.eClass().getEAllContainments();
+		for (EReference eRef : containments) {
+			System.out.println(" contains -> " + eRef.getName());
+			Object thing = eObject.eGet(eRef);
+			if (thing instanceof List) {
+				List listThing = (List) thing;
+
+				for (Object item : listThing) {
+					if (item instanceof EObject) {
+						EObject eThing = (EObject) item;
+						System.out.println(" Identification : " + EcoreUtil.getIdentification(eThing));
+						System.out.println("      eResource : " + eThing.eResource());
+						System.out.println("     eContainer : " + eThing.eContainer());
+						recursiveContainmentCheck(model, eThing);
+					}
+				}
+			}
+		}
+		Resource oldValueResource = rdfGraphResource.getRDFResource(eObject);
+		removeEObjectStatements(model, eObject, oldValueResource);
 	}
 
 	private void removeEObjectStatements(Model model, EObject oldValueEObject, Resource oldValueResource) {
 		System.out.println(" [EObject to delete] - " + oldValueEObject.eContainer());
 		
+		// TODO CACHE the IRI and EObjectID mappings for the "detached" model elements
+		
 		// RDF Type
 		EClass oldValueEClass = oldValueEObject.eClass();
 		String oldValueNameType = oldValueEClass.getName();
 		
-		// RDF name space
+		// RDF name space -- get Name space from the EObject's root RDF node
 		EPackage oldValueEPackage = oldValueEClass.getEPackage();
 		String oldValueNameSpace = oldValueEPackage.getNsURI();
 		
@@ -656,12 +724,12 @@ public class RDFGraphResourceUpdate {
 			// This process should be run only when the Orphaned EObjects have been removed from memory and can't come back!
 			
 			List stmts = model.listStatements(null, null, oldValueResource).toList();
-			if(stmts.isEmpty()) {
+			if(!stmts.isEmpty()) {
 				//printModelToConsole(model, "BEFORE removing orphan EObject");
-				System.out.println("orphan EObject:\n - " + oldValueEObject.hashCode() 
-						+ "\n  - " + EcoreUtil.getIdentification(oldValueEObject)
-						+ "\n  - " + oldValueResource.getURI());
-				model.getResource(oldValueResource.getURI()).listProperties().forEach(s-> System.out.println(" -- " + s));
+				System.out.println("orphan EObject: (#" + oldValueEObject.hashCode() 
+						+ ") - " + EcoreUtil.getIdentification(oldValueEObject)
+						+ "\n @ " + oldValueResource.getURI());
+				model.getResource(oldValueResource.getURI()).listProperties().forEach(s-> System.out.println("  - " + s));
 				model.removeAll(oldValueResource, null, null);
 				//printModelToConsole(model, "AFTER removing orphan EObject");
 			
@@ -669,6 +737,7 @@ public class RDFGraphResourceUpdate {
 		} else {
 			// If there is more than one type, then we need to prune only statements for the EObject.
 			// Look at the EClass of the EObject and remove statements for each EStructuralFeature (recursively)
+			
 			// TODO We also need to not remove statements that overlap with EStructuralFeatures of other types when we have a dual-type RDF-EObject
 			
 			EList<EStructuralFeature> esfs = oldValueEObject.eClass().getEAllStructuralFeatures();
@@ -687,8 +756,7 @@ public class RDFGraphResourceUpdate {
 			model.remove(oldValueResource, RDF.type, model.createLiteral(String.format("%s#%s", oldValueNameSpace, oldValueNameType )));
 		}
 	}
-	
-	
+		
 	private Resource addNewEObject(Model model, EObject eObject) {
 		
 		Resource eObjectRes = createNewEObjectRootRDFstatement(eObject, model);		
@@ -770,7 +838,7 @@ public class RDFGraphResourceUpdate {
 		if (model.contains(oldStatement)) {
 			model.remove(oldStatement);
 			// TODO handle removing the last reference to an EObject : remove orphan EObject
-			checkForOrphanedEObject(model, oldValue);
+			checkForContainmentReference(model, eStructuralFeature, oldValue);
 			return;
 		}
 		
@@ -779,7 +847,7 @@ public class RDFGraphResourceUpdate {
 		if (stmtToRemove != null) {
 			model.remove(stmtToRemove);
 			// TODO handle removing the last reference to an EObject : remove orphan EObject
-			checkForOrphanedEObject(model, oldValue);
+			checkForContainmentReference(model, eStructuralFeature, oldValue);
 			return;
 		}
 		
@@ -792,7 +860,7 @@ public class RDFGraphResourceUpdate {
 						eStructuralFeature.getDefaultValue(), oldValue));					
 			}
 			// TODO handle removing the last reference to an EObject : remove orphan EObject
-			checkForOrphanedEObject(model, oldValue);
+			checkForContainmentReference(model, eStructuralFeature, oldValue);
 			return;
 		}
 
@@ -866,12 +934,11 @@ public class RDFGraphResourceUpdate {
 				}
 				
 				// TODO handle removing the last reference to an EObject : remove orphan EObject
-				checkForOrphanedEObject(model, oldValue);
+				checkForContainmentReference(model, eStructuralFeature, oldValue);
 				return;
 			}
 		}
 	}
-	
 	
 	public void addMultiValueEStructuralFeature (List<Resource> namedModelURIs, EObject onEObject, EStructuralFeature eStructuralFeature, Object newValue, Object oldValue, int position) { 
 		List<Model> namedModelsToUpdate = rdfGraphResource.getNamedModels(namedModelURIs);
