@@ -55,13 +55,17 @@ public class RDFGraphResourceNotificationAdapterChangeRDF extends EContentAdapte
 	}
 
 	private void eStructuralFeatureNotification(EStructuralFeature eStructuralFeature, Notification notification) {		
-		
 		EObject onEObject = (EObject) notification.getNotifier(); 	// RDF node
 		EStructuralFeature changedFeature = eStructuralFeature; 	// RDF property
 		// eAttribute's values are the objects						// RDF object (node/literal)
 		Object oldValue = notification.getOldValue();
 		Object newValue = notification.getNewValue();
 		int position = notification.getPosition();
+		
+		if(null == onEObject.eResource()) {
+			// No eResource on this EObject, it is detached.
+			return;
+		}
 		
 		RDFGraphResourceImpl graphResource = (RDFGraphResourceImpl) onEObject.eResource();
 		RDFGraphResourceUpdate rdfUpdater = graphResource.getRDFGraphUpdater();
