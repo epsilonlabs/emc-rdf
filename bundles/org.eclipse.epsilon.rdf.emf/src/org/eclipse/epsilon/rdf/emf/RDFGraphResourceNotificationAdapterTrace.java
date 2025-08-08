@@ -103,6 +103,11 @@ public class RDFGraphResourceNotificationAdapterTrace extends EContentAdapter {
 		Object newValue = notification.getNewValue();
 		
 		RDFGraphResourceImpl graphResource = (RDFGraphResourceImpl) onEObject.eResource();
+		if(null == graphResource) {
+			processTrace.append("  Adapter firing for EObject with no Graph Resource");
+			reportEObjectIdentity(onEObject);
+			return;
+		}
 		Map<EObject, Resource> mapEobToRDF = graphResource.getEObjectToRDFResourceMap();
 		ResourceSet mapRDFToEob = graphResource.getResourceSet();
 
@@ -145,19 +150,19 @@ public class RDFGraphResourceNotificationAdapterTrace extends EContentAdapter {
 				// Create new statement
 				if (null == newValue) {
 					// Create new statement for null value
-					processTrace.append(String.format("\n ** new statement set to null"));
+					processTrace.append(String.format("\n ** Create new statement set to null"));
 				} else {
 					// Create new statement for value
-					processTrace.append(String.format("\n ** new statement set to value %s", newValue));
+					processTrace.append(String.format("\n ** Create new statement set to value %s", newValue));
 				}
 			} else {
 				// Update existing statement
 				if (null == newValue) {
 					// Update existing statement to null
-					processTrace.append(String.format("\n ** existing statement set to null"));
+					processTrace.append(String.format("\n ** Update statement set to null"));
 				} else {
 					// Update existing statement value
-					processTrace.append(String.format("\n ** existing statement set to value %s", newValue));
+					processTrace.append(String.format("\n ** Update statement set to value %s", newValue));
 				}
 			}
 			break;
